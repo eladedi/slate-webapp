@@ -2,11 +2,11 @@
 
 > **You are picking up an in-progress product post-MVP.** Slate now ships on two platforms: an Android app (sections 1–31, canonical reference) and a Desktop web/Tauri app (sections 32–34, currently lagging behind mobile). Read top-to-bottom before touching code. After reading, you should be able to continue collaborating with Elad without him re-explaining anything.
 >
-> **Last updated:** 2026-06-12 (desktop gap-analysis pass)
+> **Last updated:** 2026-06-12 (desktop Tier 1 + Tier 2 gap-closure + Linear-minimal design overhaul)
 > **Mobile version:** 1.0.0 (versionCode 2) — see `app/build.gradle.kts` in the Android repo
 > **Desktop version:** 0.1.0 (pre-Tauri / Firebase Hosting) — see `package.json` in `D:\slate-webapp`
 > **Mobile state:** All 6 phases shipped + multiple post-MVP iterations (bottom-nav refactor, global archive, default-board seeding, per-board/column colors, urgent dashboard, note archive, "added at" date, system-bar inset fix, archive real-time + description-preserve fix, **email-based sharing with pendingInvites**, **per-card assignment with creator/assignee gating**, **board pinch+button zoom**, **inline subtasks with done/total badge**, **archive restore gated by creator/assignee with toast on failure**, **UI/Design refresh — see §17**, **Dark mode — see §18**, **AI Smart Assistant on `feature/ai-assistant` — see §19**, **linked notes on tasks — see §20**, **firestore.rules `isEditor` simplification — see §21**, **"לוח תעדוף" → "לוח משימות" rename — see §22**).
-> **Desktop state:** Functional skeleton — auth, boards/columns/cards, notes, archive, sharing, assistant, drag-and-drop, subtasks, linked notes, multi-assignee, weekly counter, urgent dashboard. Significant gaps vs mobile: see §33 (parity matrix) and §34 (gap list to close).
+> **Desktop state:** Tier 1 closed (first-launch board seeding + `users/{uid}` profile upsert). Tier 2 mostly closed — dark mode, URL routing with `?card=` deep-link, assignee avatars on Kanban cards, share-dialog email-history autocomplete, persistent marked-urgent set with collapsible "משימות דחופות" section. Cross-device sync of marked-urgent moved from `localStorage` → `users/{uid}.markedUrgentCardIds` in Firestore (Android needs a parallel migration). **Linear-minimal design overhaul shipped — see §35.** Remaining gaps: notifications system, card reminder bell, assistant polish (persistent history / prompt editor / usage display / retired-model guard / dynamic greeting), checklist done-items partitioning, Tauri native integrations.
 
 ---
 
@@ -976,6 +976,8 @@ What's already on desktop vs what's missing. Use this together with §34 to scop
 
 ### Implemented on desktop ✅
 - Google sign-in via Firebase Auth (`signInWithPopup`)
+- **First-launch board seeding** — `seedDefaultsIfNeeded(uid)` transactional lock on `users/{uid}.seededAt`; creates 4 default boards (עבודה / אישי / פיננסי / בית) × 4 columns on every new user's first sign-in. `DEFAULT_BOARDS` lives in `src/seedDefaults.ts` alongside `DEFAULT_COLUMNS`. Wired into `App.tsx` auth `useEffect`.
+- **`users/{uid}` profile upsert on every sign-in** — `upsertUserProfile(user)` in `userRepository.ts`. Writes `email` (lowercased) + `displayName` + `photoUrl` via `setDoc({merge: true})`. Other users can now `findUserByEmail` this account, so email shares to a registered user go Path A `granted` directly.
 - Boards list, columns, cards (Kanban) with real-time `onSnapshot`
 - Notes (3 types: checklist / bullets / free_text)
 - Global archive screen with 2 inner tabs (tasks across all boards + whole notes)
@@ -989,36 +991,36 @@ What's already on desktop vs what's missing. Use this together with §34 to scop
 - Drag-to-reorder note items (active items only)
 - Sharing: email invite (Path A `granted` / Path B `pendingInvites`) + share-link generator (`?invite=<linkId>`)
 - `consumePendingInvitesFor` runs on every sign-in
+- **Share dialog: email autocomplete history** — `slate.share.emailHistory` MRU in `localStorage` (cap 20, deduped case-insensitively); rendered via `<datalist>` on the email field.
 - Quick Add dialog (pick board + column, create card)
 - Manually designate any column as the urgent one (column 3-dot menu → "סמן כעמודה דחופה")
 - Move column up/down via 3-dot menu (no drag — same as mobile §11.2)
 - Home dashboard: weekly-completed badge + total urgent + per-board tile breakdown
+- **Urgent Task Rows on Home** — collapsible "משימות דחופות" section listing the actual cards in each board's urgent column. Click row → opens the card detail directly (uses URL routing). `observeUrgentCardsPerBoard(uid, cb)` repo method emits `Map<boardId, UrgentCard[]>`; same fan-out pattern as `observeUrgentCountsPerBoard`. Collapse state persisted to `localStorage` (`slate.home.urgentSectionOpen`).
+- **Persisted "marked as urgent" set, Firestore-backed cross-device** — `users/{uid}.markedUrgentCardIds: string[]`. `observeMarkedUrgentCardIds` + `setCardMarkedUrgent` (arrayUnion / arrayRemove) in `userRepository.ts`. `useMarkedUrgent(uid)` hook returns the live set. **Mobile still writes to DataStore (per-device); Android needs a parallel migration to sync across platforms.**
+- **Assignee Google avatars on Kanban cards** — `Avatar` + `AvatarStack` components in `src/components/Avatar.tsx`. Renders `User.photoUrl` when present; colored initial chip with hue derived from `hashCode(uid) % 360` otherwise. Stack shows first 3 + `+N` overflow chip. BoardView hydrates `memberProfiles: Map<uid, User>` from each member's `users/{uid}` doc and threads it through to `CardView`.
+- **URL routing with `?card=` deep-link** — minimal hash router in `src/router.ts` (no new dep). URL shapes: `#/home`, `#/boards/<bid>`, `#/boards/<bid>?card=<cid>`, `#/notes/<nid>`, `#/archive`, `#/settings`. Refreshing the page preserves selection. `replaceRoute` clears `?card=` once the deep-link is consumed. `CardView.forceOpen` opens the modal when the URL matches its card id.
+- **Dark mode** — three-mode selector in Settings ("מערכת" / "בהיר" / "כהה") persisted to `localStorage` (`slate.themeMode`). `ThemeProvider` in `src/theme.ts` writes `data-theme="dark"` to `<html>` at runtime, driving CSS variables defined in `index.css`. `useTheme()` hook returns the active variant. System mode follows `prefers-color-scheme` and reacts to OS changes.
 - Cross-board card moves (`moveCardBetweenBoards`) used by the assistant
 - AI Smart Assistant (left-side panel): planActions via Gemini, capability toggles, INSERT_CARD/INSERT_NOTE_ITEM/APPEND_NOTE_TEXT/MOVE_CARD/LINK_NOTE_TO_CARD/SHOW_STATUS/PROPOSE_NEW_*/ASK_CLARIFICATION, 30-second undo, BYO API key (localStorage), daily-cap enforcement
 - Assistant privacy disclosure (lightweight one-shot status bubble in chat)
 - Toast host with `toast.success/error/()` helpers
+- **Linear-minimal design overhaul** — see §35 for the full token / typography / surface rewrite.
 
 ### Missing on desktop ❌ (numbered to match §34 work items)
-1. **First-launch default-board seeding** (mobile §9, §8 `seededAt` lock) — `seedDefaults.ts` exports the constants but **nothing calls them on first sign-in**. New users land on an empty boards list.
-2. **`users/{uid}` profile upsert with lowercased email** (mobile §4, §7 AuthRepository) — desktop never writes `users/{uid}` on sign-in. **Direct consequence:** other users can't find this user via `findUserByEmail`, so email-based sharing TO this user falls through Path A → Path B (`pendingInvites`) even when they're already signed up.
-3. **Dark mode + theme persistence** (mobile §18) — desktop is light-only ("מצב כהה מתוכנן כשלב הבא" stub copy in `SettingsScreen`).
-4. **In-app notifications system** (mobile §31) — `users/{uid}/notifications/{notifId}` listener, NotificationsBridge, share/assignment/reminder producers, browser `Notification` API integration, and the reminder bell on `CardDetail`.
-5. **Persisted "marked as urgent" card set + Urgent Task Row on Home** (mobile §31) — desktop Home shows aggregated tile counts only, no individual urgent rows, no "mark this card as urgent" affordance.
-6. **Tap urgent row / notification → open specific card** (mobile §31 `BoardRoute.openCardId`) — no URL routing for board/card selection at all on desktop (uses `useState`).
-7. **Card reminder ("bell") with 24h cooldown** (mobile §31) — no `pingAssignees` repository method, no bell UI on `CardDetail`.
-8. **Assignee Google avatars on task cards** (mobile §24) — desktop card surface shows title/description/subtask pill only; no avatar chip. Inside the modal, the assignee picker shows display names only — no photo.
-9. **Share dialog: email autocomplete history (MRU)** (mobile §29) — desktop `ShareDialog` uses a plain `<input>`, no history dropdown.
-10. **Assistant: persistent chat history** (mobile §26) — desktop assistant is in-memory only; closing the panel wipes the thread. `assistantSettings` has no `getHistory`/`setHistory`.
-11. **Assistant: system-prompt editor UI** (mobile §19 `AssistantPromptScreen`) — `assistantSettings.getPrompt/setPrompt` exist in code but no UI to edit the prompt.
-12. **Assistant: usage counter visible to user** (mobile §19) — `getUsageToday` exists but isn't displayed anywhere.
-13. **Assistant: retired-model auto-upgrade** (mobile §27) — `assistantSettings.getModel()` returns whatever's in localStorage; no `RETIRED_MODELS` guard. Stale `gemini-1.5-flash` values would 404.
-14. **Assistant: dynamic greeting listing enabled capabilities** (mobile §19) — desktop greeting is static.
-15. **Type-safe / URL-backed routing** (mobile §7) — desktop nav lives in `useState<Destination>`. Refreshing the page loses selected board/note. No `/board/<id>` or `?card=<id>` URLs.
-16. **Deep-link / intent buffer for notifications** (mobile §31 `NotificationIntentBuffer`) — desktop has inline `?invite=<linkId>` handling but no buffer for "open this card after auth completes."
-17. **Mobile §25 checklist UX details** — desktop checklist already supports drag-to-reorder and empty-commit-deletes, but does NOT: (a) partition done items to the bottom with a 24dp gap, (b) auto-place the "+ הוסף פריט" row above the done section. Active and done items render in original order.
-18. **Reminder cooldown DataStore equivalent** — depends on #7; would use `localStorage` JSON map (mirror of mobile `cardLastPingAtMap`).
-19. **Assistant prompt rule for empty-urgent boards** (mobile §28) — `DEFAULT_SYSTEM_PROMPT` in `assistantModels.ts` should include the "skip boards with zero urgent / return 'אין משימות דחופות' if none" rule.
-20. **Tauri native integration** — Tauri shell builds but has zero custom commands, no system-tray, no native OS notifications (would map to desktop equivalent of mobile §31), no auto-update channel.
+1. **In-app notifications system** (mobile §31) — `users/{uid}/notifications/{notifId}` listener, NotificationsBridge equivalent, share/assignment/reminder producers, browser `Notification` API integration.
+2. **Card reminder ("bell") with 24h cooldown** (mobile §31) — no `pingAssignees` repository method, no bell UI on `CardDetail`. Depends on #1 plumbing.
+3. **Reminder cooldown DataStore equivalent** — depends on #2; mirror of mobile `cardLastPingAtMap` in `localStorage`.
+4. **Assistant: persistent chat history** (mobile §26) — desktop assistant is in-memory only; closing the panel wipes the thread.
+5. **Assistant: system-prompt editor UI** (mobile §19 `AssistantPromptScreen`) — `assistantSettings.getPrompt/setPrompt` exist in code but no UI.
+6. **Assistant: usage counter visible to user** (mobile §19) — `getUsageToday` exists but isn't displayed anywhere.
+7. **Assistant: retired-model auto-upgrade** (mobile §27) — no `RETIRED_MODELS` guard; stale `gemini-1.5-flash` values would 404.
+8. **Assistant: dynamic greeting listing enabled capabilities** (mobile §19) — desktop greeting is static.
+9. **Assistant prompt rule for empty-urgent boards** (mobile §28) — `DEFAULT_SYSTEM_PROMPT` should skip boards with zero urgent / return "אין משימות דחופות" if none.
+10. **Mobile §25 checklist UX details** — desktop checklist already supports drag-to-reorder and empty-commit-deletes, but does NOT: (a) partition done items to the bottom with a 24dp gap, (b) auto-place the "+ הוסף פריט" row above the done section. Active and done items render in original order.
+11. **Tauri native integration** — Tauri shell builds but has zero custom commands, no system-tray, no native OS notifications, no auto-update channel.
+12. **Android-side migration of `markedUrgentCardIds` → Firestore.** Today mobile writes to DataStore; until it also reads/writes `users/{uid}.markedUrgentCardIds`, marks made on mobile don't appear on desktop and vice-versa. Desktop side is already on Firestore.
+13. **Component-level theme migration for legacy `t` importers** — `ShareDialog.tsx`, `AssistantPanel.tsx`, and `CardDetail.tsx` import the static `t` object instead of using `useTheme()`. They now look correct in light mode and roughly-correct in dark (CSS variables drive the borders / surfaces in most spots), but a clean pass would swap them to the hook so brand-accent calls track the active theme tier.
 
 ### Differences-by-design (not gaps)
 - **Per-board pinch+button zoom** (mobile §7.4) — N/A on desktop; browser zoom handles it.
@@ -1034,67 +1036,124 @@ What's already on desktop vs what's missing. Use this together with §34 to scop
 
 ---
 
-## 34. Desktop gap-list (work items to close)
+## 34. Desktop gap-list (remaining work)
 
-Numbered to match §33. Order = roughly suggested priority — Elad to confirm before any work starts. Items above the line are correctness/data-integrity blockers; everything below is feature parity.
+Numbered to match §33. Items above the line block functionality; below the line are polish.
 
-### Tier 1 — correctness / data-integrity gaps (do these first)
-1. **Wire `seedDefaultsIfNeeded(uid)` on first sign-in.** New users get an empty boards list today. Port from mobile §9: a transactional check on `users/{uid}.seededAt`, then a board-first-then-columns write loop using `DEFAULT_COLUMNS`. Hook in `App.tsx` auth `useEffect`.
-2. **Upsert `users/{uid}` profile on every sign-in** with `email` lowercased + `displayName` + `photoUrl` (mobile §4). One `setDoc(... { merge: true })` in the same auth `useEffect`. Without this, partner-to-this-user email sharing falls into Path B every time.
-13. **Assistant: retired-model guard.** Add a `RETIRED_MODELS` set in `assistantSettings.getModel()` that auto-upgrades stored `gemini-1.5-flash*`/`gemini-1.5-pro` to `DEFAULT_MODEL`. Quick fix; same rationale as mobile §27.
-19. **Assistant prompt rule for empty-urgent boards** — copy the mobile §28 rule into `assistantModels.DEFAULT_SYSTEM_PROMPT`.
-
-### Tier 2 — high-value feature parity
-4. **Notifications system end-to-end.**
+### Tier 1 — notifications + reminder (the next big push)
+1. **Notifications system end-to-end** (mobile §31).
    - Add `NotificationItem` type, `notificationsRepository.ts` (`observeNotifications` + `notifyShare` / `notifyAssignment` / `notifyReminder` producers), and a process-wide listener started from `App.tsx` once the user is known.
-   - Producers fire from `shareByEmail` Path A, `setCardAssignees` (for each new uid), and a new `pingAssignees` (see #7).
+   - Producers fire from `shareByEmail` Path A, `setCardAssignees` (for each new uid), and a new `pingAssignees` (see #2).
    - Surface in-app via a toast or unread badge; optionally browser `Notification.requestPermission()` for OS-level pops.
-   - Rules block already exists on mobile; no rules change needed since the Android push will have published it.
-5. **Persisted "marked as urgent" set + Urgent Task Row on Home.**
-   - Add `markedUrgentCardIds` to `localStorage` (mirror of mobile `SettingsRepository.markedUrgentCardIds`).
-   - New `UrgentTaskRow` component listing cards from each board's urgent column.
-   - Each row clickable to open the card via #6.
-6. **URL-backed routing for board / card open targets.**
-   - Move `dest` / `selectedBoardId` / `selectedNoteId` into the URL (could be a minimal hash router or `react-router-dom`).
-   - Support `?card=<cardId>` on a board route — the open-card-after-load retry loop from mobile §31 maps cleanly to a `useEffect` watching `cardsByColumn`.
-7. **Card reminder bell + cooldown.**
+   - Rules block exists on mobile; no rules change needed (Android already published it).
+2. **Card reminder bell + cooldown** (mobile §31).
    - Repo: `pingAssignees(boardId, columnId, cardId, currentUid)` — fan-out to each non-self assignee.
-   - UI: bell button in `CardDetail` header; tinted by cooldown state.
-   - `localStorage` JSON map keyed by cardId → last-ping ms (mirror of mobile `cardLastPingAtMap`).
-3. **Dark mode + theme persistence.**
-   - Tokens: add `*Dark` variants in `theme.ts` (mobile §18 lists every key).
-   - Persist `themeMode: "system" | "light" | "dark"` in `localStorage`.
-   - UI: chip selector in `SettingsScreen` (mobile shows only "בהיר" / "כהה"; "מערכת" is the silent default — same here).
-   - System-mode detection: `window.matchMedia("(prefers-color-scheme: dark)")`.
-8. **Assignee avatars on task cards.**
-   - Hydrate `User.photoUrl` from `users/{uid}` (cached map at the board level).
-   - Render 24–28px circular `<img>` in `CardView`; initial-chip fallback with hue derived from `hashCode(uid) % 360`.
-9. **Share dialog: email autocomplete history.**
-   - Append on `kind === "granted"` or `"pending"` to a `localStorage` MRU list (newest first, deduped case-insensitively, capped at 20).
-   - Render as a `<datalist>` on the email `<input>` (simplest path; no extra dep).
+   - UI: bell button on `CardDetail` header; tinted by cooldown state.
+   - `localStorage` JSON map keyed by cardId → last-ping ms (mirror of mobile `cardLastPingAtMap`). This is item #3 from §33.
 
-### Tier 3 — assistant polish
-10. **Assistant: persistent chat history.** Mirror mobile §26 — encode `bubbles` + `conversation` to JSON, persist under `slate.assistant.history` in `localStorage`, hydrate on panel open, exclude transient bubbles (proposals already-resolved, undo banner).
-11. **Assistant: system-prompt editor UI.** A textarea section in `AssistantSettings` that reads `assistantSettings.getPrompt()` and writes `setPrompt()`. The setter already exists.
-12. **Assistant: usage counter display.** Show "X/100 הודעות היום" inside `AssistantSettings`, using `assistantSettings.getUsageToday()` and `DAILY_MESSAGE_CAP`.
-14. **Assistant: dynamic greeting listing enabled capabilities.** Replace the static "היי! ספר לי…" with a generated line that lists active capability labels from `CAP_LABELS`. Logic mirrors mobile §19.
+### Tier 2 — assistant polish
+4. **Persistent chat history** (mobile §26) — encode `bubbles` + `conversation` to JSON, persist under `slate.assistant.history` in `localStorage`, hydrate on open, exclude transient bubbles.
+5. **System-prompt editor UI** (mobile §19) — textarea section in `AssistantSettings` that reads `assistantSettings.getPrompt()` and writes `setPrompt()`. Setter already exists.
+6. **Usage counter display** — show "X/100 הודעות היום" using `getUsageToday()` and `DAILY_MESSAGE_CAP`.
+7. **Retired-model guard** (mobile §27) — `RETIRED_MODELS` set in `assistantSettings.getModel()` that auto-upgrades stored `gemini-1.5-flash*` / `gemini-1.5-pro` to `DEFAULT_MODEL`.
+8. **Dynamic greeting** listing active capability labels from `CAP_LABELS`.
+9. **Prompt rule for empty-urgent boards** (mobile §28) — append to `DEFAULT_SYSTEM_PROMPT`.
 
-### Tier 4 — UX / polish
-17. **Checklist: sink done items to the bottom with a 24dp gap and place "+ הוסף פריט" above the done section** (mobile §25 partitioning).
-15. (Covered by #6 above — URL routing.)
-16. (Covered by #6 above — intent buffer collapses into URL params on the web.)
-20. **Tauri native integrations** — separate workstream; defer until web app is at parity. Then: system tray, OS notification surface (different code path from in-app §31), single-instance lock, auto-update channel.
-21. **Design-system reconciliation** — either: (a) port mobile DESIGN.md tokens into `theme.ts` for a unified system, or (b) keep "Desert Study" desktop as a deliberate variant and document the per-screen mapping. Elad to call.
+### Tier 3 — UX / polish
+10. **Checklist done-items partitioning** (mobile §25) — partition done items to the bottom with a 24dp gap; move "+ הוסף פריט" above the done section.
+11. **Tauri native integrations** — system tray, OS notifications (different code path from in-app), single-instance lock, auto-update channel. Defer until web app is at full parity.
+12. **Android-side migration of `markedUrgentCardIds` → Firestore** so marks sync cross-platform. Desktop already writes to `users/{uid}.markedUrgentCardIds`; the Android `SettingsRepository.markedUrgentCardIds` needs to switch from DataStore to a Firestore listener on the same field, with `arrayUnion`/`arrayRemove` on toggle. The Firestore rules already permit user-self-write to `users/{uid}`, so no rules change.
+13. **Component-level theme migration** — `ShareDialog.tsx`, `AssistantPanel.tsx`, `CardDetail.tsx` import the static `t` object instead of `useTheme()`. The CSS-variable layer keeps them close-to-correct in dark mode, but a clean sweep would swap the imports.
 
 ### How to verify after each change
 Desktop has no test suite. The verification loop is:
 1. `npm run dev`, open `http://localhost:5173`, sign in.
-2. Use the feature on a real board (the partner's `info@alternabe.co.il` account is the test data).
+2. Use the feature on a real board (`eladedi11391@gmail.com` is the test data account).
 3. Cross-check the Firestore Console for the schema fields written.
 4. If the change interacts with mobile (shared schema), launch the Android emulator from `D:\Slate` and confirm the change still renders correctly there.
 
-### Out of scope for this gap-closure pass
+### Out of scope for the next pass
 - No backend / Cloud Functions work (Spark plan constraint still applies).
 - No Firestore schema changes — every gap item above either reuses existing fields or adds purely client-side state.
-- No new dependencies unless explicitly approved (the current dep list is intentionally small: `firebase`, `react`, `@dnd-kit/*`).
+- No new dependencies unless explicitly approved (current list: `firebase`, `react`, `@dnd-kit/*`).
+
+---
+
+## 35. Desktop design overhaul — Linear-minimal (2026-06-12)
+
+A focused front-end pass to retire the warm-cream "Desert Study" identity in favour of a Linear-style minimal aesthetic: restrained color, generous whitespace, hairline borders, near-neutral surfaces. Brand accent (terracotta) is preserved but applied sparingly — focus rings, selected nav, primary CTAs only, never as a background fill.
+
+**Direction confirmed with user:** Modern minimal (Linear-style). Defaults accepted: drop the serif heading family, keep terracotta as the single brand accent, use per-board user colours as small dots only (no left-edge stripes on cards).
+
+### Token layer (the foundation)
+- **`src/index.css`** — rewrote the `:root` and `html[data-theme="dark"]` CSS-variable blocks. Light is paper-white (`#fafaf9`) + neutral stone grays (`#f5f5f4` / `#ebe9e7` / `#e7e5e4`) + warm-brown-free text (`#1c1917` / `#44403c` / `#78716c`). Dark is near-pure black (`#0a0a0a`) + neutral charcoal surfaces (`#171717` / `#1f1f1f` / `#262626`). Added `--outline-strong` for hover/selected states; added `--selected-strong`, `--focus-ring`, `--shadow-popover`, `--shadow-modal`. Status colors are Tailwind-style (rose-600 `#dc2626`, emerald-700 `#15803d`).
+- **`src/theme.ts`** — `lightTokens` + `darkTokens` were re-keyed to the same neutral palette so components that still import the static `t` object inherit the new look. `fontSerif` now points at the sans stack (no longer Noto Serif Hebrew) so legacy callers stop fragmenting type.
+- Typography: sans-only (Inter + Heebo); headings semibold (600), not bold; tighter letter-spacing (`-0.015em`); body line-height `1.55`; `font-feature-settings: "cv02","cv03","cv04","cv11"` for Inter's alternate glyphs.
+
+### Surface-level rewrites
+- **Nav rail (`App.tsx` + `src/components/Icons.tsx`)** — replaced unicode glyphs (⌂, ▦, ✎, ⌫, ⚙) with inline Lucide-style SVG line-icons in a new `Icon` component (`home`, `kanban`, `note`, `archive`, `settings`, `plus`, `sparkles`). Width 76px, pill-shaped active background (no border stripe), hover state, accent treatment for the assistant button.
+- **Sidebar (boards/notes list)** — rows are now pill-shaped (8px radius, 8px side margin). Selected row uses neutral `--selected-strong` (was warm cream / sage). Color dots represent board accent; truncation via `text-overflow: ellipsis`.
+- **Home (`HomeScreen`)** — dropped the giant `urgentHero` card. New layout:
+  - Greeting at 22px semibold with a subtler weekly badge (small outlined pill, hidden when count=0).
+  - Empty-state message ("אין משימות דחופות כרגע 🎉") when no urgent items.
+  - Urgent-tasks section is a single bordered card with hairline dividers between rows; collapsible via chevron with per-device persistence (`slate.home.urgentSectionOpen`).
+  - "לפי לוח" tile grid: tiles are now clickable buttons (deep-link to board), tabular-nums on the count, neutral surface, no colored left-stripe.
+- **Boards (Kanban)** — column container is **transparent** (no warm cream fill). Column header is a single row: dot + name + count + optional urgency badge + 3-dot menu. Cards default to flat (`box-shadow: none`); border strengthens on hover (`var(--outline-strong)`). Done/move buttons hide until hover so cards read cleanly; description clamped to 2 lines via `WebkitLineClamp`.
+- **Card detail modal (`CardDetail.tsx`)** — borderless title input (focus reveals), description sits on a subtle `surface-low` field, section labels are 12px medium-weight (no caps), chips are full-pill 999-radius, ghost footer buttons. Delete is text-style danger (red `var(--error)`, not a red fill).
+- **Top-of-card affordances** — subtask pill is a thin outline chip with `font-variant-numeric: tabular-nums`. Assignee avatar stack overflow `+N` chip uses neutral tokens (was warm cream).
+- **Add Card / Add Column** — retired dashed borders. Add Card is a flat text affordance inside the column; Add Column is a subtle bordered button.
+- **Buttons** — `primaryBtn` and `ghostBtn` standardized to 6px radius, smaller padding, removed inset shadows / inset highlights. Type chips in dialogs use an inverted dark-on-light selected state.
+
+### Shorthand/longhand cleanup
+React warned about mixing shorthand (`border`, `borderInlineStart`) with longhand overrides (`borderColor`, `borderInlineStartColor`). Fixed three callsites:
+- `tileCard` → expanded to four side-specific borders (`borderBlockStart`/`End`, `borderInlineEnd`, plus longhand `borderInlineStartWidth`/`Style`/`Color`). Then the design rewrite removed the colored stripe entirely (tiles are uniform now), but the longhand pattern stays for safety.
+- `railBtnActive` → uses the shorthand `borderInlineStart: "2px solid var(--primary)"`, matching `railBtn`. (Then the design rewrite dropped the stripe in favour of a pill background — so this is moot but kept the fix for the wider lesson.)
+- `typeChipActive` → swapped `borderColor` for the full `border` shorthand.
+
+### `effectiveAssignees` null-safety
+Old cards lacking the `assigneeIds` array crashed `CardView`. Added a guard: `if (card.assigneeIds && card.assigneeIds.length > 0) return card.assigneeIds`. Mirrors the same defensive read already in `CardDetail.tsx`.
+
+### Files touched in this pass
+**Rewritten**
+- `src/index.css` (CSS variables + typography)
+- `src/theme.ts` (light + dark token objects)
+
+**New**
+- `src/components/Icons.tsx` (inline SVG line-icon set)
+
+**Heavy edits**
+- `src/App.tsx` — every style constant in the bottom block; `HomeScreen` body; `UrgentTaskRow`; `BoardView` toolbar; `ColumnView` header + card list; `CardView` body + hover-reveal action stack; nav rail render + new `NavRailButton` component; sidebar row treatment.
+- `src/components/CardDetail.tsx` — every style constant; header label restyle.
+- `src/components/Avatar.tsx` — overflow chip + photo chip use neutral tokens.
+
+**No changes needed**
+- `src/components/ShareDialog.tsx`, `src/components/AssistantPanel.tsx` — these import the static `t` object and inherit the refreshed token values. They look light-mode-correct and roughly-correct in dark; flagged as §34 #13 follow-up to swap them to `useTheme()` for full per-mode polish.
+
+### Design work remaining (next pass)
+
+The Linear-minimal pass intentionally scoped itself to the three highest-traffic surfaces: **Home, Boards (Kanban), and CardDetail**. Everything else inherits the new token layer and reads roughly-correct, but hasn't been *deliberately* redesigned. Punch list, in suggested order:
+
+**Screens not yet structurally redesigned**
+1. **NoteView (`App.tsx` → `NoteView` / `FreeTextEditor` / `ItemList` / `SortableNoteItem`).** Currently uses the shared `addInputStyle` / `itemRow` / `textareaStyle` constants. Works, but the active-vs-done partition from mobile §25 isn't here yet (also listed as §34 #10). The note title rendering could match CardDetail's borderless-until-focus pattern.
+2. **ArchiveScreen.** Inner tabs already use the refreshed treatment; archive rows could move to the same single-bordered-card-with-hairline-dividers list pattern used by `UrgentTaskRow` on Home for visual consistency.
+3. **SettingsScreen.** The appearance section (theme chips) is fine, but the account/about cards still feel like generic surfaces. Worth a Linear-style profile-row treatment with subtle dividers between sections.
+4. **Login screen (`App.tsx` unauthenticated branch).** Hardcoded "Slate Desktop" title + "התחבר עם Google" button. Centered card layout is acceptable but unbranded. Wants a more confident lockup (mark + tagline + button hierarchy).
+5. **CreateBoardDialog / CreateNoteDialog / QuickAddDialog.** They pick up the new `dialogPanel` / `dialogInput` / `typeChip` styles already, but the layout patterns (chip rows for type selection, etc.) deserve a deliberate look — especially the QuickAdd dialog which is the fastest-to-use surface.
+
+**Components not yet restyled**
+6. **`ShareDialog.tsx`.** Imports the static `t` object (so it inherits new color values but uses old radii + paddings). Visual structure (role chip row, link copy block) is sound; a refresh would tighten field padding, swap chip radii to match elsewhere, and update the link copy block.
+7. **`AssistantPanel.tsx`.** Same `t`-import situation as ShareDialog, but more visible — the left-side sheet is a big surface. Bubbles, proposal cards, the input row, and the settings sub-screen all read "v1" against the new Linear aesthetic.
+8. **`Menu.tsx`** (3-dot popover used on board rows, note rows, columns, etc.). Hasn't been opened in this pass. Worth checking padding, hover state, destructive item color.
+9. **`Toast.tsx`** (success/error host). Inherits via the toast component's own inline styles. If the host hardcodes warm cream / brown hex, swap to neutral tokens.
+
+**Architectural cleanups**
+10. **Migrate `ShareDialog` + `AssistantPanel` + `CardDetail` from `import { t }` → `useTheme()`.** Same item as §34 #13. The static `t` export now points at the light-mode tokens; in dark mode they get *roughly* correct rendering via CSS variables, but per-mode polish (subtle shadows, borders strength) won't flow cleanly until they read the active variant.
+11. **Drop the obsolete "Desert Study" naming.** The phrase still appears in `DESIGN_SYSTEM.md`, the `theme.ts` legacy `t` comment, and the Settings appearance helper text ("ערכת 'Desert Study'…"). Either rebrand the desktop identity (and update the doc) or just drop the name in favor of "Linear-minimal" (or no name at all).
+12. **Rewrite `DESIGN_SYSTEM.md`** to match the new tokens. It currently describes the warm-cream palette and serif heading family. Until it's rewritten, `src/theme.ts` + `src/index.css` are the only source of truth for desktop tokens.
+
+**Smaller polish items observed during the pass**
+13. **Focus rings.** Defined `--focus-ring` in `index.css` and stripped the default browser outlines, but no element actually consumes the new ring yet. Pick a small set (buttons, inputs, the nav rail) and add `:focus-visible { box-shadow: var(--focus-ring); }` so keyboard navigation is visible without being noisy.
+14. **Empty states across the app.** Home now has a friendly empty state for urgent tasks. Boards-without-cards, archive-empty, no-notes-yet could get the same treatment — a centered short message plus a primary action.
+15. **Loading skeletons.** Currently every screen pops from blank → loaded with no transition. Linear-style would use thin shimmer skeletons or a stable "loading…" line.
+16. **Per-board color usage.** The user's chosen board color now renders only as a small dot (sidebar, urgent row, tile, column header). If you want any more presence — e.g. as a border accent in the board toolbar or as a tint on the column count badge — that would be a deliberate next step.
 

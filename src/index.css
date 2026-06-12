@@ -1,73 +1,94 @@
-:root {
-  --bg: #fff8f5;
-  --surface: #ffffff;
-  --surface-low: #fff1e7;
-  --surface-container: #feeadb;
-  --surface-high: #f8e5d6;
-  --surface-variant: #f2dfd0;
-  --sidebar: #fff1e7;
+/*
+ * Slate desktop design tokens — Modern minimal (Linear-style).
+ *
+ * Restrained warmth: paper-white base with neutral gray surfaces. Terracotta
+ * stays as the brand accent but is applied sparingly (focus rings, selected
+ * nav, primary CTAs only). Per-board user colors render as small dots,
+ * never as fills.
+ */
 
-  --on-surface: #231a11;
-  --on-surface-variant: #55433b;
-  --outline: #88736a;
-  --outline-variant: #dbc1b7;
+:root {
+  --bg: #fafaf9;
+  --surface: #ffffff;
+  --surface-low: #f5f5f4;
+  --surface-container: #f5f5f4;
+  --surface-high: #ebe9e7;
+  --surface-variant: #e7e5e4;
+  --sidebar: #fafaf9;
+
+  --on-surface: #1c1917;
+  --on-surface-variant: #44403c;
+  --outline: #78716c;
+  --outline-variant: #e7e5e4;
+  --outline-strong: #d6d3d1;
 
   --primary: #94451d;
-  --primary-container: #b35d33;
+  --primary-container: #a85a2c;
   --on-primary: #ffffff;
 
-  --secondary: #4c653e;
-  --secondary-container: #cdecba;
+  --secondary: #15803d;
+  --secondary-container: #dcfce7;
 
-  --error: #ba1a1a;
-  --error-container: #ffdad6;
+  --error: #dc2626;
+  --error-container: #fee2e2;
 
-  --urgency-urgent: #d64545;
-  --urgency-urgent-tint: #ffe9e0;
+  --urgency-urgent: #dc2626;
+  --urgency-urgent-tint: #fef2f2;
 
-  --hover: #f8e5d6;
-  --selected: #feeadb;
-  --scrim: rgba(58, 47, 37, 0.35);
+  --hover: #f5f5f4;
+  --selected: #f5f5f4;
+  --selected-strong: #ebe9e7;
+  --scrim: rgba(0, 0, 0, 0.4);
 
-  --placeholder: #88736a;
-  --scrollbar-thumb: #dbc1b7;
+  --placeholder: #a8a29e;
+  --scrollbar-thumb: #d6d3d1;
+
+  --focus-ring: 0 0 0 2px rgba(148, 69, 29, 0.35);
+  --shadow-popover: 0 4px 16px rgba(28, 25, 23, 0.08);
+  --shadow-modal: 0 24px 56px rgba(28, 25, 23, 0.14);
 
   color-scheme: light;
 }
 
 html[data-theme="dark"] {
-  --bg: #1a1410;
-  --surface: #241c17;
-  --surface-low: #2b211b;
-  --surface-container: #33271f;
-  --surface-high: #3a2d24;
-  --surface-variant: #473529;
-  --sidebar: #1f1813;
+  --bg: #0a0a0a;
+  --surface: #171717;
+  --surface-low: #1f1f1f;
+  --surface-container: #1f1f1f;
+  --surface-high: #2e2e2e;
+  --surface-variant: #262626;
+  --sidebar: #0a0a0a;
 
-  --on-surface: #f2e6dc;
-  --on-surface-variant: #cdbcb0;
-  --outline: #a08c7e;
-  --outline-variant: #5a443a;
+  --on-surface: #f5f5f4;
+  --on-surface-variant: #d6d3d1;
+  --outline: #a3a3a3;
+  --outline-variant: #262626;
+  --outline-strong: #404040;
 
   --primary: #e08a3c;
-  --primary-container: #b35d33;
-  --on-primary: #1a1410;
+  --primary-container: #a85a2c;
+  --on-primary: #1c1917;
 
-  --secondary: #9fbb7a;
-  --secondary-container: #4c653e;
+  --secondary: #4ade80;
+  --secondary-container: #14532d;
 
-  --error: #ffb4ab;
-  --error-container: #93000a;
+  --error: #f87171;
+  --error-container: #450a0a;
 
-  --urgency-urgent: #ff7a6f;
-  --urgency-urgent-tint: #3d201c;
+  --urgency-urgent: #f87171;
+  --urgency-urgent-tint: #1c0e0e;
 
-  --hover: #3a2d24;
-  --selected: #33271f;
-  --scrim: rgba(0, 0, 0, 0.55);
+  --hover: #1f1f1f;
+  --selected: #262626;
+  --selected-strong: #2e2e2e;
+  --scrim: rgba(0, 0, 0, 0.7);
 
-  --placeholder: #a08c7e;
-  --scrollbar-thumb: #5a443a;
+  --placeholder: #737373;
+  --scrollbar-thumb: #404040;
+
+  --focus-ring: 0 0 0 2px rgba(224, 138, 60, 0.5);
+  --shadow-popover: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-modal: 0 24px 56px rgba(0, 0, 0, 0.7);
 
   color-scheme: dark;
 }
@@ -86,20 +107,39 @@ body,
 body {
   background: var(--bg);
   color: var(--on-surface);
-  font-family: "Heebo", "Inter", system-ui, sans-serif;
+  font-family: "Inter", "Heebo", system-ui, -apple-system, sans-serif;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
+/*
+ * Linear-style typography — single sans family (Inter + Heebo for Hebrew),
+ * tighter letter-spacing on display sizes, semibold (not bold) headings.
+ */
 h1,
 h2,
-h3 {
-  font-family: "Noto Serif Hebrew", "Noto Serif", serif;
-  font-weight: 700;
+h3,
+h4 {
+  font-family: inherit;
+  font-weight: 600;
   color: var(--on-surface);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+  margin: 0;
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-size: 18px;
+}
+h3 {
+  font-size: 16px;
 }
 
 input,
@@ -110,12 +150,16 @@ select {
   color: inherit;
 }
 
+button {
+  letter-spacing: -0.005em;
+}
+
 ::placeholder {
   color: var(--placeholder);
   opacity: 1;
 }
 
-/* Calm scrollbars */
+/* Subtle scrollbars */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -125,6 +169,18 @@ select {
   border-radius: 6px;
   border: 2px solid var(--bg);
 }
+::-webkit-scrollbar-thumb:hover {
+  background: var(--outline);
+}
 ::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* Removes the default focus halo; components add `box-shadow: var(--focus-ring)`
+ * where appropriate so focus is visible without being noisy. */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
 }

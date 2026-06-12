@@ -22,111 +22,110 @@ import {
  */
 
 const lightTokens: Theme = {
-  // Surfaces
-  background: "#fff8f5",
+  // Surfaces — paper white + neutral grays. No warm cream fills anywhere.
+  background: "#fafaf9",
   surface: "#ffffff",
-  surfaceLow: "#fff1e7",
-  surfaceContainer: "#feeadb",
-  surfaceHigh: "#f8e5d6",
-  surfaceVariant: "#f2dfd0",
-  sidebar: "#fff1e7",
+  surfaceLow: "#f5f5f4",
+  surfaceContainer: "#f5f5f4",
+  surfaceHigh: "#ebe9e7",
+  surfaceVariant: "#e7e5e4",
+  sidebar: "#fafaf9",
 
-  // Text
-  onSurface: "#231a11",
-  onSurfaceVariant: "#55433b",
-  outline: "#88736a",
-  outlineVariant: "#dbc1b7",
+  // Text — near-black + true muted gray (not warm brown).
+  onSurface: "#1c1917",
+  onSurfaceVariant: "#44403c",
+  outline: "#78716c",
+  outlineVariant: "#e7e5e4",
 
-  // Primary (Terracotta)
+  // Primary (Terracotta — accent only; never used as a background fill)
   primary: "#94451d",
-  primaryContainer: "#b35d33",
+  primaryContainer: "#a85a2c",
   onPrimary: "#ffffff",
   primaryFixed: "#ffdbcd",
 
-  // Secondary (Sage)
-  secondary: "#4c653e",
-  secondaryContainer: "#cdecba",
+  // Secondary (cool sage for success states / weekly badge)
+  secondary: "#15803d",
+  secondaryContainer: "#dcfce7",
   onSecondary: "#ffffff",
 
-  // Tertiary (Ochre)
+  // Tertiary (legacy — rarely referenced)
   tertiary: "#7a5500",
   tertiaryContainer: "#996c04",
 
   // Status
-  error: "#ba1a1a",
+  error: "#dc2626",
   onError: "#ffffff",
-  errorContainer: "#ffdad6",
-  success: "#4c653e",
+  errorContainer: "#fee2e2",
+  success: "#15803d",
 
-  // Urgency (matches mobile §17 urgency tokens for the marked-urgent surface)
-  urgencyUrgent: "#d64545",
-  urgencyUrgentTint: "#ffe9e0",
+  urgencyUrgent: "#dc2626",
+  urgencyUrgentTint: "#fef2f2",
 
   // Interaction
-  hover: "#f8e5d6",
-  selected: "#feeadb",
-  scrim: "rgba(58,47,37,0.35)",
+  hover: "#f5f5f4",
+  selected: "#f5f5f4",
+  scrim: "rgba(0,0,0,0.4)",
 
-  // Type
-  fontBody: "'Heebo','Inter',system-ui,sans-serif",
-  fontSerif: "'Noto Serif Hebrew','Noto Serif',serif",
+  // Type — sans only. Serif dropped for the Linear-minimal pass.
+  fontBody: "'Inter','Heebo',system-ui,-apple-system,sans-serif",
+  fontSerif: "'Inter','Heebo',system-ui,-apple-system,sans-serif",
 
-  // Shape
+  // Shape — slightly sharper than before.
   radiusSm: 6,
   radius: 8,
-  radiusMd: 12,
-  radiusLg: 16,
+  radiusMd: 10,
+  radiusLg: 14,
 
-  // Elevation
-  shadowSoft: "0 1px 2px rgba(58,47,37,0.05)",
-  shadowRaised: "0 2px 8px rgba(58,47,37,0.08)",
-  shadowPopover: "0 6px 20px rgba(58,47,37,0.10)",
-  shadowModal: "0 16px 48px rgba(58,47,37,0.16)",
+  // Elevation — flat by default; only dialogs / modals / popovers carry weight.
+  shadowSoft: "none",
+  shadowRaised: "0 1px 2px rgba(28,25,23,0.04)",
+  shadowPopover: "0 4px 16px rgba(28,25,23,0.08)",
+  shadowModal: "0 24px 56px rgba(28,25,23,0.14)",
 };
 
 const darkTokens: Theme = {
-  // Surfaces — warm near-black palette so the terracotta accents stay legible
-  background: "#1a1410",
-  surface: "#241c17",
-  surfaceLow: "#2b211b",
-  surfaceContainer: "#33271f",
-  surfaceHigh: "#3a2d24",
-  surfaceVariant: "#473529",
-  sidebar: "#1f1813",
+  // Surfaces — near-pure dark + neutral charcoal. Stays out of the way.
+  background: "#0a0a0a",
+  surface: "#171717",
+  surfaceLow: "#1f1f1f",
+  surfaceContainer: "#1f1f1f",
+  surfaceHigh: "#2e2e2e",
+  surfaceVariant: "#262626",
+  sidebar: "#0a0a0a",
 
   // Text
-  onSurface: "#f2e6dc",
-  onSurfaceVariant: "#cdbcb0",
-  outline: "#a08c7e",
-  outlineVariant: "#5a443a",
+  onSurface: "#f5f5f4",
+  onSurfaceVariant: "#d6d3d1",
+  outline: "#a3a3a3",
+  outlineVariant: "#262626",
 
-  // Primary (Terracotta — lifted to stay vivid on dark)
+  // Primary (Terracotta lifted for dark contrast)
   primary: "#e08a3c",
-  primaryContainer: "#b35d33",
-  onPrimary: "#1a1410",
+  primaryContainer: "#a85a2c",
+  onPrimary: "#1c1917",
   primaryFixed: "#ffdbcd",
 
-  // Secondary (Sage — lifted)
-  secondary: "#9fbb7a",
-  secondaryContainer: "#4c653e",
-  onSecondary: "#1a1410",
+  // Secondary (cool green)
+  secondary: "#4ade80",
+  secondaryContainer: "#14532d",
+  onSecondary: "#0a0a0a",
 
-  // Tertiary
+  // Tertiary (legacy)
   tertiary: "#e0a23c",
   tertiaryContainer: "#996c04",
 
   // Status
-  error: "#ffb4ab",
-  onError: "#690005",
-  errorContainer: "#93000a",
-  success: "#9fbb7a",
+  error: "#f87171",
+  onError: "#450a0a",
+  errorContainer: "#450a0a",
+  success: "#4ade80",
 
-  urgencyUrgent: "#ff7a6f",
-  urgencyUrgentTint: "#3d201c",
+  urgencyUrgent: "#f87171",
+  urgencyUrgentTint: "#1c0e0e",
 
-  hover: "#3a2d24",
-  selected: "#33271f",
-  scrim: "rgba(0,0,0,0.55)",
+  hover: "#1f1f1f",
+  selected: "#262626",
+  scrim: "rgba(0,0,0,0.7)",
 
   fontBody: lightTokens.fontBody,
   fontSerif: lightTokens.fontSerif,
@@ -136,10 +135,10 @@ const darkTokens: Theme = {
   radiusMd: lightTokens.radiusMd,
   radiusLg: lightTokens.radiusLg,
 
-  shadowSoft: "0 1px 2px rgba(0,0,0,0.30)",
-  shadowRaised: "0 2px 8px rgba(0,0,0,0.40)",
-  shadowPopover: "0 6px 20px rgba(0,0,0,0.50)",
-  shadowModal: "0 16px 48px rgba(0,0,0,0.60)",
+  shadowSoft: "none",
+  shadowRaised: "0 1px 2px rgba(0,0,0,0.50)",
+  shadowPopover: "0 4px 16px rgba(0,0,0,0.5)",
+  shadowModal: "0 24px 56px rgba(0,0,0,0.7)",
 };
 
 export interface Theme {

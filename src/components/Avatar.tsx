@@ -33,8 +33,8 @@ export function Avatar({
           borderRadius: size / 2,
           objectFit: "cover",
           flexShrink: 0,
-          border: "1px solid #fff",
-          boxShadow: "0 0 0 1px rgba(58,47,37,0.08)",
+          border: "1px solid var(--surface)",
+          boxShadow: "0 0 0 1px var(--outline-variant)",
         }}
         referrerPolicy="no-referrer"
         onError={(e) => {
@@ -97,16 +97,16 @@ export function AvatarStack({
             width: size,
             height: size,
             borderRadius: size / 2,
-            background: "#feeadb",
-            color: "#94451d",
+            background: "var(--surface-low)",
+            color: "var(--on-surface-variant)",
             fontSize: Math.max(9, Math.floor(size * 0.42)),
-            fontWeight: 600,
+            fontWeight: 500,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             marginInlineEnd: -size / 4,
-            border: "1px solid #fff",
-            boxShadow: "0 0 0 1px rgba(58,47,37,0.08)",
+            border: "1px solid var(--surface)",
+            boxShadow: "0 0 0 1px var(--outline-variant)",
           }}
           title={`עוד ${overflow}`}
         >

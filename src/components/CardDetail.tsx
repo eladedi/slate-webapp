@@ -70,9 +70,9 @@ export function CardDetail({ card, boardId, columnId, uid, onClose }: Props) {
     <div style={backdrop} onClick={onClose}>
       <div style={modal} dir="rtl" onClick={(e) => e.stopPropagation()}>
         <div style={modalHeader}>
-          <strong style={{ fontSize: 18, fontFamily: "'Noto Serif Hebrew','Noto Serif',serif" }}>
+          <span style={{ fontSize: 12, fontWeight: 500, color: "var(--outline)", letterSpacing: 0 }}>
             פרטי המשימה
-          </strong>
+          </span>
           <button style={iconBtn} onClick={onClose} title="סגור">✕</button>
         </div>
 
@@ -553,7 +553,7 @@ function LinkedNotesPanel({
 const backdrop: React.CSSProperties = {
   position: "fixed",
   inset: 0,
-  background: "rgba(0,0,0,0.4)",
+  background: "var(--scrim)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -561,33 +561,35 @@ const backdrop: React.CSSProperties = {
 };
 const modal: React.CSSProperties = {
   width: "100%",
-  maxWidth: 560,
-  maxHeight: "85vh",
+  maxWidth: 580,
+  maxHeight: "88vh",
   display: "flex",
   flexDirection: "column",
-  background: "#fff",
+  background: "var(--surface)",
+  color: "var(--on-surface)",
+  border: "1px solid var(--outline-variant)",
   borderRadius: 12,
-  boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
-  fontFamily: "'Heebo','Inter',system-ui,sans-serif",
+  boxShadow: "var(--shadow-modal)",
+  fontFamily: "'Inter','Heebo',system-ui,-apple-system,sans-serif",
 };
 const modalHeader: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  padding: "12px 16px",
-  borderBottom: "1px solid #dbc1b7",
+  padding: "14px 20px",
+  borderBottom: "1px solid var(--outline-variant)",
 };
 const modalBody: React.CSSProperties = {
-  padding: "12px 16px",
+  padding: "20px 24px",
   overflowY: "auto",
   flex: 1,
 };
 const modalFooter: React.CSSProperties = {
   display: "flex",
-  justifyContent: "space-between",
+  justifyContent: "flex-end",
   gap: 8,
-  padding: "12px 16px",
-  borderTop: "1px solid #dbc1b7",
+  padding: "12px 20px",
+  borderTop: "1px solid var(--outline-variant)",
 };
 const iconBtn: React.CSSProperties = {
   width: 28,
@@ -596,79 +598,88 @@ const iconBtn: React.CSSProperties = {
   background: "transparent",
   cursor: "pointer",
   fontSize: 14,
-  color: "#88736a",
-  borderRadius: 14,
+  color: "var(--outline)",
+  borderRadius: 6,
 };
 const sectionLabel: React.CSSProperties = {
   fontSize: 12,
-  color: "#88736a",
-  marginBottom: 6,
-  fontWeight: 600,
-  textTransform: "uppercase",
-  letterSpacing: 0.5,
+  color: "var(--outline)",
+  marginBottom: 8,
+  fontWeight: 500,
+  textTransform: "none",
+  letterSpacing: 0,
 };
 const titleInput: React.CSSProperties = {
   width: "100%",
-  padding: "8px 0",
+  padding: "4px 0",
   border: "none",
-  borderBottom: "1px solid #dbc1b7",
-  fontSize: 18,
-  fontWeight: 600,
   background: "transparent",
+  fontSize: 20,
+  fontWeight: 600,
   fontFamily: "inherit",
   outline: "none",
+  color: "var(--on-surface)",
+  letterSpacing: "-0.01em",
 };
 const descTextarea: React.CSSProperties = {
-  marginTop: 8,
+  marginTop: 4,
   width: "100%",
-  minHeight: 80,
-  padding: 8,
-  border: "1px solid #dbc1b7",
+  minHeight: 64,
+  padding: "8px 10px",
+  border: "1px solid transparent",
   borderRadius: 6,
   fontFamily: "inherit",
   fontSize: 14,
   resize: "vertical",
-  background: "transparent",
+  background: "var(--surface-low)",
   outline: "none",
+  color: "var(--on-surface)",
+  lineHeight: 1.55,
 };
 const inlineInput: React.CSSProperties = {
   flex: 1,
   padding: "4px 8px",
-  border: "1px solid #dbc1b7",
+  border: "1px solid var(--outline-variant)",
   borderRadius: 4,
   fontFamily: "inherit",
   fontSize: 14,
   outline: "none",
+  background: "var(--surface)",
+  color: "var(--on-surface)",
 };
 const addInput: React.CSSProperties = {
   flex: 1,
-  padding: "6px 10px",
-  border: "1px solid #dbc1b7",
+  padding: "7px 10px",
+  border: "1px solid var(--outline-variant)",
   borderRadius: 6,
   fontFamily: "inherit",
-  fontSize: 14,
+  fontSize: 13,
   outline: "none",
+  background: "var(--surface)",
+  color: "var(--on-surface)",
 };
 const chip: React.CSSProperties = {
   padding: "4px 10px",
-  borderRadius: 14,
-  border: "1px solid #dbc1b7",
-  background: "#fff",
+  borderRadius: 999,
+  border: "1px solid var(--outline-variant)",
+  background: "var(--surface)",
   cursor: "pointer",
   font: "inherit",
-  fontSize: 13,
+  fontSize: 12.5,
+  color: "var(--on-surface-variant)",
 };
 const chipActive: React.CSSProperties = {
-  background: "#feeadb",
-  borderColor: "#94451d",
-  color: "#231a11",
+  background: "var(--on-surface)",
+  borderColor: "var(--on-surface)",
+  color: "var(--surface)",
+  fontWeight: 500,
 };
 const linkedRow: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: 8,
-  padding: "6px 8px",
-  background: "#feeadb",
+  padding: "8px 10px",
+  background: "var(--surface-low)",
   borderRadius: 6,
 };
 const colorDotSmall: React.CSSProperties = {
@@ -677,19 +688,20 @@ const colorDotSmall: React.CSSProperties = {
   borderRadius: 4,
 };
 const ghostBtn: React.CSSProperties = {
-  padding: "6px 14px",
+  padding: "7px 14px",
   background: "transparent",
-  border: "1px solid #dbc1b7",
+  border: "1px solid var(--outline-variant)",
   borderRadius: 6,
   cursor: "pointer",
   fontSize: 13,
   font: "inherit",
+  color: "var(--on-surface)",
 };
 const dangerBtn: React.CSSProperties = {
-  padding: "6px 14px",
-  background: "#BA1A1A",
-  color: "#fff",
-  border: "none",
+  padding: "7px 14px",
+  background: "transparent",
+  color: "var(--error)",
+  border: "1px solid var(--outline-variant)",
   borderRadius: 6,
   cursor: "pointer",
   fontSize: 13,

@@ -47,6 +47,7 @@ import { AvatarStack } from "./components/Avatar";
 import { navigate, replaceRoute, useRoute, type Destination } from "./router";
 import { toggleMarkedUrgent, useMarkedUrgent } from "./markedUrgent";
 import { useTheme, type ThemeMode } from "./theme";
+import { Icon, type IconName } from "./components/Icons";
 import { ShareDialog } from "./components/ShareDialog";
 import { CardDetail } from "./components/CardDetail";
 import { Menu } from "./components/Menu";
@@ -88,12 +89,12 @@ import {
   type User,
 } from "./types";
 
-const DESTINATIONS: { id: Destination; label: string; icon: string }[] = [
-  { id: "home", label: "בית", icon: "⌂" },
-  { id: "boards", label: "לוחות", icon: "▦" },
-  { id: "notes", label: "פתקים", icon: "✎" },
-  { id: "archive", label: "ארכיון", icon: "⌫" },
-  { id: "settings", label: "הגדרות", icon: "⚙" },
+const DESTINATIONS: { id: Destination; label: string; icon: IconName }[] = [
+  { id: "home", label: "בית", icon: "home" },
+  { id: "boards", label: "לוחות", icon: "kanban" },
+  { id: "notes", label: "פתקים", icon: "note" },
+  { id: "archive", label: "ארכיון", icon: "archive" },
+  { id: "settings", label: "הגדרות", icon: "settings" },
 ];
 
 export default function App() {
@@ -243,55 +244,52 @@ export default function App() {
       {/* Primary nav rail */}
       <nav style={navRail}>
         {DESTINATIONS.map((d) => (
-          <button
+          <NavRailButton
             key={d.id}
+            label={d.label}
+            icon={d.icon}
+            active={dest === d.id}
             onClick={() => setDest(d.id)}
-            title={d.label}
-            style={{ ...railBtn, ...(dest === d.id ? railBtnActive : {}) }}
-          >
-            <span style={railIcon}>{d.icon}</span>
-            <span style={railLabel}>{d.label}</span>
-          </button>
+          />
         ))}
-        <button
-          onClick={() => setQuickAddOpen(true)}
-          title="הוספה מהירה"
-          style={{ ...railBtn, marginTop: "auto" }}
-        >
-          <span style={railIcon}>＋</span>
-          <span style={railLabel}>מהיר</span>
-        </button>
-        <button
-          onClick={() => setAssistantOpen(true)}
-          title="עוזר חכם"
-          style={{ ...railBtn, color: "var(--primary)" }}
-        >
-          <span style={railIcon}>✨</span>
-          <span style={railLabel}>עוזר</span>
-        </button>
+        <div style={{ marginTop: "auto" }}>
+          <NavRailButton
+            label="מהיר"
+            icon="plus"
+            onClick={() => setQuickAddOpen(true)}
+          />
+          <NavRailButton
+            label="עוזר"
+            icon="sparkles"
+            accent
+            onClick={() => setAssistantOpen(true)}
+          />
+        </div>
       </nav>
 
       {/* Secondary sidebar — only on Boards / Notes destinations */}
       {(dest === "boards" || dest === "notes") && (
         <aside style={sidebar}>
           {dest === "boards" ? (
-            <div style={{ padding: "12px 0" }}>
-              <div style={navLabel}>הלוחות שלי ({boards.length})</div>
+            <div style={{ padding: "8px 0" }}>
+              <div style={navLabel}>הלוחות שלי</div>
               {boards.map((b) => (
                 <div
                   key={b.id}
                   style={{
                     ...boardRow,
-                    background: b.id === selectedBoardId ? "var(--selected)" : "transparent",
-                    padding: 0,
+                    background: b.id === selectedBoardId ? "var(--selected-strong)" : "transparent",
+                    padding: "6px 12px",
                   }}
                 >
                   <button
                     onClick={() => setSelectedBoardId(b.id)}
-                    style={{ ...sidebarItemBtn, flex: 1 }}
+                    style={{ ...sidebarItemBtn, flex: 1, fontSize: 13.5 }}
                   >
-                    <span style={{ ...colorDot, background: b.color || "#94451d" }} />
-                    <span>{b.name}</span>
+                    <span style={{ ...colorDot, background: b.color || "var(--primary)" }} />
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {b.name}
+                    </span>
                   </button>
                   <Menu
                     items={[
@@ -335,23 +333,25 @@ export default function App() {
               </button>
             </div>
           ) : (
-            <div style={{ padding: "12px 0" }}>
-              <div style={navLabel}>הפתקים שלי ({notes.length})</div>
+            <div style={{ padding: "8px 0" }}>
+              <div style={navLabel}>הפתקים שלי</div>
               {notes.map((n) => (
                 <div
                   key={n.id}
                   style={{
                     ...boardRow,
-                    background: n.id === selectedNoteId ? "var(--secondary-container)" : "transparent",
-                    padding: 0,
+                    background: n.id === selectedNoteId ? "var(--selected-strong)" : "transparent",
+                    padding: "6px 12px",
                   }}
                 >
                   <button
                     onClick={() => setSelectedNoteId(n.id)}
-                    style={{ ...sidebarItemBtn, flex: 1 }}
+                    style={{ ...sidebarItemBtn, flex: 1, fontSize: 13.5 }}
                   >
-                    <span style={{ ...colorDot, background: "var(--secondary)" }} />
-                    <span>{n.name}</span>
+                    <span style={{ ...colorDot, background: "var(--on-surface-variant)" }} />
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {n.name}
+                    </span>
                   </button>
                   <Menu
                     items={[
@@ -585,7 +585,7 @@ function HomeScreen({ user, boards }: { user: FirebaseUser; boards: Board[] }) {
   const allUrgent: (UrgentCard & { boardName: string; boardColor: string })[] = [];
   for (const b of boards) {
     for (const uc of urgentByBoard.get(b.id) ?? []) {
-      allUrgent.push({ ...uc, boardName: b.name, boardColor: b.color || "#94451d" });
+      allUrgent.push({ ...uc, boardName: b.name, boardColor: b.color || "var(--primary)" });
     }
   }
   allUrgent.sort((a, b) => {
@@ -598,61 +598,147 @@ function HomeScreen({ user, boards }: { user: FirebaseUser; boards: Board[] }) {
   const firstName = user.displayName?.split(" ")[0] ?? "";
 
   return (
-    <div style={{ padding: 24, maxWidth: 960, marginInline: "auto" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-        <h1 style={{ margin: 0, fontSize: 24 }}>היי {firstName}</h1>
-        <span style={weeklyBadge}>{weeklyCompleted} הושלמו השבוע</span>
-      </div>
+    <div style={{ padding: "32px 32px 48px", maxWidth: 920, marginInline: "auto" }}>
+      <header
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 32,
+        }}
+      >
+        <h1 style={{ fontSize: 22, fontWeight: 600 }}>
+          {firstName ? `היי ${firstName}` : "ברוך הבא"}
+        </h1>
+        {weeklyCompleted > 0 && (
+          <span style={weeklyBadge}>{weeklyCompleted} הושלמו השבוע</span>
+        )}
+      </header>
 
-      <div style={urgentHero}>
-        <span style={{ fontSize: 28 }}>!</span>
-        <div>
-          <div style={{ fontSize: 18, fontWeight: 600 }}>יש לך {totalUrgent} משימות דחופות</div>
-          <div style={{ fontSize: 13, color: "var(--outline)" }}>לחץ על משימה כדי לפתוח אותה</div>
-        </div>
-      </div>
-
-      {allUrgent.length > 0 && (
-        <div style={{ marginTop: 16 }}>
+      {allUrgent.length > 0 ? (
+        <section style={{ marginBottom: 36 }}>
           <button onClick={toggleSection} style={sectionToggle}>
             <span
               aria-hidden
               style={{
                 display: "inline-block",
+                width: 14,
+                fontSize: 11,
+                color: "var(--outline)",
                 transition: "transform 120ms ease",
                 transform: sectionOpen ? "rotate(90deg)" : "rotate(0deg)",
               }}
             >
               ▸
             </span>
-            <span>משימות דחופות ({allUrgent.length})</span>
+            <span>משימות דחופות</span>
+            <span
+              style={{
+                color: "var(--outline)",
+                fontWeight: 500,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {allUrgent.length}
+            </span>
           </button>
           {sectionOpen && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
-              {allUrgent.map((u) => (
+            <div
+              style={{
+                marginTop: 8,
+                background: "var(--surface)",
+                border: "1px solid var(--outline-variant)",
+                borderRadius: 8,
+                overflow: "hidden",
+              }}
+            >
+              {allUrgent.map((u, i) => (
                 <UrgentTaskRow
                   key={u.card.id}
                   urgent={u}
                   isMarked={marked.has(u.card.id)}
                   uid={user.uid}
+                  isLast={i === allUrgent.length - 1}
                 />
               ))}
             </div>
           )}
-        </div>
+        </section>
+      ) : (
+        <section
+          style={{
+            marginBottom: 36,
+            padding: "20px 24px",
+            background: "var(--surface)",
+            border: "1px solid var(--outline-variant)",
+            borderRadius: 8,
+            color: "var(--outline)",
+            fontSize: 13,
+          }}
+        >
+          {totalUrgent === 0 ? "אין משימות דחופות כרגע 🎉" : "טוען…"}
+        </section>
       )}
 
-      <div style={{ fontWeight: 600, margin: "16px 0 8px" }}>פירוט לפי לוח</div>
+      <div
+        style={{
+          fontSize: 12,
+          color: "var(--outline)",
+          textTransform: "none",
+          fontWeight: 500,
+          marginBottom: 10,
+          letterSpacing: 0,
+        }}
+      >
+        לפי לוח
+      </div>
       <div style={tileGrid}>
-        {boards.map((b) => (
-          <div key={b.id} style={{ ...tileCard, borderInlineStartColor: b.color || "#94451d" }}>
-            <div style={{ fontWeight: 600 }}>{b.name}</div>
-            <div style={{ fontSize: 32, fontWeight: 700, color: b.color || "#94451d" }}>
-              {(urgentByBoard.get(b.id) ?? []).length}
-            </div>
-            <div style={{ fontSize: 12, color: "var(--outline)" }}>משימות</div>
-          </div>
-        ))}
+        {boards.map((b) => {
+          const count = (urgentByBoard.get(b.id) ?? []).length;
+          return (
+            <button
+              key={b.id}
+              onClick={() => {
+                navigate({ dest: "boards", boardId: b.id });
+              }}
+              style={{
+                ...tileCard,
+                cursor: "pointer",
+                font: "inherit",
+                textAlign: "start",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 13,
+                  color: "var(--on-surface-variant)",
+                  fontWeight: 500,
+                }}
+              >
+                <span style={{ ...colorDot, background: b.color || "var(--primary)" }} />
+                <span>{b.name}</span>
+              </div>
+              <div
+                style={{
+                  fontSize: 28,
+                  fontWeight: 600,
+                  letterSpacing: "-0.02em",
+                  fontVariantNumeric: "tabular-nums",
+                  color: count > 0 ? "var(--on-surface)" : "var(--outline)",
+                  marginTop: 4,
+                }}
+              >
+                {count}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--outline)" }}>
+                {count === 1 ? "משימה דחופה" : "משימות דחופות"}
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -662,10 +748,12 @@ function UrgentTaskRow({
   urgent,
   isMarked,
   uid,
+  isLast,
 }: {
   urgent: UrgentCard & { boardName: string; boardColor: string };
   isMarked: boolean;
   uid: string;
+  isLast: boolean;
 }) {
   const { boardId, columnId, card, boardName, boardColor } = urgent;
   function open() {
@@ -682,20 +770,27 @@ function UrgentTaskRow({
         display: "flex",
         alignItems: "center",
         gap: 12,
-        padding: "10px 14px",
-        background: isMarked ? "var(--urgency-urgent-tint)" : "var(--surface)",
-        border: `1px solid ${isMarked ? "var(--urgency-urgent)" : "var(--outline-variant)"}`,
-        borderRadius: 12,
+        padding: "12px 16px",
+        background: isMarked ? "var(--urgency-urgent-tint)" : "transparent",
+        borderBottom: isLast ? "none" : "1px solid var(--outline-variant)",
         cursor: "pointer",
         color: "var(--on-surface)",
+        transition: "background 120ms ease",
       }}
       title={`${boardName} · פתח כרטיס`}
       data-column-id={columnId}
+      onMouseEnter={(e) => {
+        if (!isMarked) e.currentTarget.style.background = "var(--surface-low)";
+      }}
+      onMouseLeave={(e) => {
+        if (!isMarked) e.currentTarget.style.background = "transparent";
+      }}
     >
       <span style={{ ...colorDot, background: boardColor }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
+            fontSize: 14,
             fontWeight: 500,
             whiteSpace: "nowrap",
             overflow: "hidden",
@@ -704,22 +799,41 @@ function UrgentTaskRow({
         >
           {card.title}
         </div>
-        <div style={{ fontSize: 12, color: "var(--outline)", marginTop: 2 }}>{boardName}</div>
+      </div>
+      <div
+        style={{
+          fontSize: 12,
+          color: "var(--outline)",
+          flexShrink: 0,
+        }}
+      >
+        {boardName}
       </div>
       <button
         onClick={toggle}
         title={isMarked ? "הסר סימון דחיפות" : "סמן כדחוף"}
         style={{
-          width: 32,
-          height: 32,
-          borderRadius: 16,
+          width: 24,
+          height: 24,
+          borderRadius: 12,
           border: "none",
-          background: isMarked ? "var(--urgency-urgent)" : "transparent",
-          color: isMarked ? "#fff" : "var(--outline)",
+          background: "transparent",
+          color: isMarked ? "var(--urgency-urgent)" : "var(--outline)",
+          opacity: isMarked ? 1 : 0.45,
           cursor: "pointer",
           fontSize: 16,
           fontWeight: 700,
           flexShrink: 0,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transition: "opacity 120ms ease, color 120ms ease",
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.opacity = "1";
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.opacity = isMarked ? "1" : "0.45";
         }}
       >
         !
@@ -1113,7 +1227,7 @@ function BoardView({
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div style={boardToolbar}>
-        <strong style={{ fontFamily: "'Noto Serif Hebrew','Noto Serif',serif" }}>{boardName}</strong>
+        <h1 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>{boardName}</h1>
         <button style={ghostBtn} onClick={() => setShareOpen(true)}>שתף לוח</button>
       </div>
       {shareOpen && (
@@ -1250,11 +1364,21 @@ function ColumnView({
   return (
     <div style={columnStyle}>
       <div style={columnHeader}>
-        <span style={{ ...colorDot, background: column.color || "#dbc1b7" }} />
-        <strong>{column.name}</strong>
+        <span style={{ ...colorDot, background: column.color || "var(--outline-strong)" }} />
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--on-surface)" }}>
+          {column.name}
+        </span>
+        <span
+          style={{
+            color: "var(--outline)",
+            fontSize: 12,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {cards.length}
+        </span>
         {isUrgent && <span style={urgentBadge}>דחוף</span>}
-        <span style={{ color: "var(--outline)", fontSize: 12, marginInlineStart: "auto" }}>{cards.length}</span>
-        {columnMenu}
+        <span style={{ marginInlineStart: "auto" }}>{columnMenu}</span>
       </div>
       <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
         <div
@@ -1265,8 +1389,9 @@ function ColumnView({
             gap: 8,
             minHeight: 40,
             borderRadius: 8,
-            background: isOver ? "rgba(224,138,60,0.06)" : "transparent",
+            background: isOver ? "var(--surface-low)" : "transparent",
             padding: 2,
+            transition: "background 120ms ease",
           }}
         >
           {cards.map((c) => (
@@ -1372,35 +1497,73 @@ function CardView({
   }
   const otherColumns = columns.filter((c) => c.id !== columnId);
 
+  const subtasksDone = (card.subtasks ?? []).filter((s) => s.done).length;
+  const subtasksTotal = (card.subtasks ?? []).length;
+  const [hover, setHover] = useState(false);
+
   return (
     <>
-      <div style={{ ...cardStyle, cursor: "pointer" }} onClick={() => setOpen(true)}>
-        <div style={{ display: "flex", gap: 8 }}>
+      <div
+        style={{
+          ...cardStyle,
+          cursor: "pointer",
+          borderColor: hover ? "var(--outline-strong)" : "var(--outline-variant)",
+        }}
+        onClick={() => setOpen(true)}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+      >
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 500 }}>{card.title}</div>
+            <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4 }}>{card.title}</div>
             {card.description && (
-              <div style={{ fontSize: 12, color: "var(--outline)", marginTop: 4 }}>{card.description}</div>
+              <div
+                style={{
+                  fontSize: 12.5,
+                  color: "var(--outline)",
+                  marginTop: 4,
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                {card.description}
+              </div>
             )}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                marginTop: 6,
-                flexWrap: "wrap",
-              }}
-            >
-              {(card.subtasks ?? []).length > 0 && (
-                <div style={subtaskPill}>
-                  {(card.subtasks ?? []).filter((s) => s.done).length} / {(card.subtasks ?? []).length}
+            {(subtasksTotal > 0 || assignees.length > 0) && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginTop: 10,
+                  flexWrap: "wrap",
+                }}
+              >
+                {subtasksTotal > 0 && (
+                  <div style={subtaskPill}>
+                    {subtasksDone}/{subtasksTotal}
+                  </div>
+                )}
+                <div style={{ marginInlineStart: "auto" }}>
+                  {assignees.length > 0 && (
+                    <AvatarStack uids={assignees} profiles={memberProfiles} size={20} max={3} />
+                  )}
                 </div>
-              )}
-              {assignees.length > 0 && (
-                <AvatarStack uids={assignees} profiles={memberProfiles} size={22} max={3} />
-              )}
-            </div>
+              </div>
+            )}
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 4,
+              opacity: hover ? 1 : 0,
+              transition: "opacity 120ms ease",
+              pointerEvents: hover ? "auto" : "none",
+            }}
+          >
             <button title="סמן כהושלם" style={doneBtn} onClick={markDone}>
               ✓
             </button>
@@ -1629,6 +1792,44 @@ function SortableNoteItem({
   );
 }
 
+// -------------------- nav rail button --------------------
+
+function NavRailButton({
+  label,
+  icon,
+  active,
+  accent,
+  onClick,
+}: {
+  label: string;
+  icon: IconName;
+  active?: boolean;
+  accent?: boolean;
+  onClick: () => void;
+}) {
+  const [hover, setHover] = useState(false);
+  const style: React.CSSProperties = {
+    ...railBtnBase,
+    ...(accent ? railBtnAccent : {}),
+    ...(active ? railBtnActive : {}),
+    ...(hover && !active ? { background: "var(--selected)" } : {}),
+  };
+  return (
+    <button
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      aria-current={active ? "page" : undefined}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={style}
+    >
+      <Icon name={icon} size={18} />
+      <span style={railLabel}>{label}</span>
+    </button>
+  );
+}
+
 // -------------------- styles --------------------
 // Color values reference CSS variables defined in `index.css`. The `:root` set
 // is the light palette; `html[data-theme="dark"]` overrides them. Theme is
@@ -1637,54 +1838,62 @@ function SortableNoteItem({
 const shell: React.CSSProperties = {
   display: "flex",
   height: "100vh",
-  fontFamily: "'Heebo','Inter',system-ui,sans-serif",
+  fontFamily: "'Inter','Heebo',system-ui,-apple-system,sans-serif",
   background: "var(--bg)",
   color: "var(--on-surface)",
 };
 const navRail: React.CSSProperties = {
-  width: 84,
+  width: 76,
   flexShrink: 0,
-  background: "var(--surface)",
+  background: "var(--bg)",
   borderInlineEnd: "1px solid var(--outline-variant)",
   display: "flex",
   flexDirection: "column",
-  padding: "12px 0",
-  gap: 4,
+  padding: "12px 8px",
+  gap: 2,
 };
-const railBtn: React.CSSProperties = {
+const railBtnBase: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  gap: 4,
+  gap: 5,
   padding: "10px 4px",
   border: "none",
   background: "transparent",
   cursor: "pointer",
   color: "var(--outline)",
   font: "inherit",
-  borderInlineStart: "3px solid transparent",
+  borderRadius: 8,
+  width: "100%",
+  transition: "color 120ms ease, background 120ms ease",
 };
 const railBtnActive: React.CSSProperties = {
-  color: "var(--primary)",
-  borderInlineStart: "3px solid var(--primary)",
-  background: "var(--selected)",
+  color: "var(--on-surface)",
+  background: "var(--selected-strong)",
 };
-const railIcon: React.CSSProperties = { fontSize: 20 };
-const railLabel: React.CSSProperties = { fontSize: 11 };
+const railBtnAccent: React.CSSProperties = {
+  color: "var(--primary)",
+};
+const railLabel: React.CSSProperties = {
+  fontSize: 10.5,
+  letterSpacing: 0,
+  fontWeight: 500,
+};
 const loginCard: React.CSSProperties = {
   margin: "auto",
   padding: 32,
   background: "var(--surface)",
+  border: "1px solid var(--outline-variant)",
   borderRadius: 12,
-  boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+  boxShadow: "var(--shadow-modal)",
   textAlign: "center",
   minWidth: 320,
 };
 const sidebar: React.CSSProperties = {
-  width: 260,
+  width: 240,
   flexShrink: 0,
   borderInlineEnd: "1px solid var(--outline-variant)",
-  background: "var(--surface)",
+  background: "var(--bg)",
   display: "flex",
   flexDirection: "column",
   overflow: "auto",
@@ -1697,18 +1906,21 @@ const main: React.CSSProperties = {
 };
 const emptyMain: React.CSSProperties = { padding: 24, color: "var(--outline)" };
 const navLabel: React.CSSProperties = {
-  padding: "8px 16px",
+  padding: "14px 16px 6px",
   fontSize: 11,
-  textTransform: "uppercase",
+  textTransform: "none",
   color: "var(--outline)",
-  letterSpacing: 0.5,
+  letterSpacing: 0,
+  fontWeight: 500,
 };
 const boardRow: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: 8,
-  padding: "8px 16px",
-  width: "100%",
+  padding: "6px 12px",
+  marginInline: 8,
+  borderRadius: 6,
+  width: "calc(100% - 16px)",
   border: "none",
   background: "transparent",
   cursor: "pointer",
@@ -1724,48 +1936,49 @@ const colorDot: React.CSSProperties = {
   flexShrink: 0,
 };
 const primaryBtn: React.CSSProperties = {
-  padding: "10px 24px",
+  padding: "8px 16px",
   background: "var(--primary)",
   color: "var(--on-primary)",
-  border: "none",
-  borderRadius: 8,
-  fontSize: 14,
+  border: "1px solid var(--primary)",
+  borderRadius: 6,
+  fontSize: 13,
   cursor: "pointer",
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.18), 0 2px 6px rgba(58,47,37,0.18)",
-  fontWeight: 600,
+  fontWeight: 500,
+  transition: "background 120ms ease",
 };
 const ghostBtn: React.CSSProperties = {
-  padding: "4px 12px",
+  padding: "6px 12px",
   background: "transparent",
   border: "1px solid var(--outline-variant)",
   borderRadius: 6,
-  fontSize: 12,
+  fontSize: 13,
   cursor: "pointer",
-  color: "inherit",
+  color: "var(--on-surface)",
+  fontWeight: 500,
+  transition: "background 120ms ease, border-color 120ms ease",
 };
 const boardToolbar: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  padding: "12px 16px",
-  background: "var(--surface)",
+  padding: "14px 24px",
+  background: "var(--bg)",
   borderBottom: "1px solid var(--outline-variant)",
   flexShrink: 0,
 };
 const kanban: React.CSSProperties = {
   display: "flex",
-  gap: 16,
-  padding: 16,
+  gap: 20,
+  padding: "20px 24px",
   overflowX: "auto",
   height: "100%",
   boxSizing: "border-box",
 };
 const columnStyle: React.CSSProperties = {
-  minWidth: 260,
-  width: 260,
-  background: "var(--surface-container)",
-  borderRadius: 12,
-  padding: 12,
+  minWidth: 280,
+  width: 280,
+  background: "transparent",
+  padding: 0,
   display: "flex",
   flexDirection: "column",
   gap: 8,
@@ -1774,33 +1987,37 @@ const columnHeader: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: 8,
-  padding: "4px 4px 8px",
+  padding: "0 4px 12px",
+  marginBottom: 4,
 };
 const cardStyle: React.CSSProperties = {
   background: "var(--surface)",
   color: "var(--on-surface)",
-  borderRadius: 10,
-  padding: "10px 12px",
+  borderRadius: 8,
+  padding: "12px 14px",
   border: "1px solid var(--outline-variant)",
-  boxShadow: "0 1px 2px rgba(58,47,37,0.05)",
+  boxShadow: "none",
   position: "relative",
+  transition: "border-color 120ms ease, background 120ms ease",
 };
 const addCardBtn: React.CSSProperties = {
-  marginTop: 4,
-  padding: "8px",
+  marginTop: 2,
+  padding: "8px 10px",
   background: "transparent",
-  border: "1px dashed var(--outline-variant)",
+  border: "none",
   borderRadius: 6,
-  color: "var(--on-surface-variant)",
+  color: "var(--outline)",
   fontSize: 13,
   cursor: "pointer",
+  textAlign: "start",
+  transition: "background 120ms ease, color 120ms ease",
 };
 const moveSelect: React.CSSProperties = {
-  width: 28,
+  width: 24,
   height: 22,
   border: "1px solid var(--outline-variant)",
   background: "var(--surface)",
-  color: "var(--on-surface)",
+  color: "var(--on-surface-variant)",
   borderRadius: 4,
   fontSize: 11,
   cursor: "pointer",
@@ -1808,28 +2025,34 @@ const moveSelect: React.CSSProperties = {
   textAlign: "center",
 };
 const doneBtn: React.CSSProperties = {
-  width: 28,
-  height: 28,
+  width: 24,
+  height: 24,
   border: "1px solid var(--outline-variant)",
   background: "var(--surface)",
-  borderRadius: 14,
+  borderRadius: 12,
   cursor: "pointer",
-  fontSize: 14,
+  fontSize: 12,
   color: "var(--secondary)",
   flexShrink: 0,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
 };
 const subtaskPill: React.CSSProperties = {
-  display: "inline-block",
-  padding: "2px 8px",
+  display: "inline-flex",
+  alignItems: "center",
+  padding: "1px 6px",
   fontSize: 11,
-  background: "var(--surface-container)",
-  borderRadius: 10,
+  background: "transparent",
+  border: "1px solid var(--outline-variant)",
+  borderRadius: 4,
   color: "var(--on-surface-variant)",
+  fontVariantNumeric: "tabular-nums",
 };
 const textareaStyle: React.CSSProperties = {
   width: "100%",
   minHeight: 240,
-  padding: 12,
+  padding: 14,
   border: "1px solid var(--outline-variant)",
   borderRadius: 8,
   fontFamily: "inherit",
@@ -1837,15 +2060,17 @@ const textareaStyle: React.CSSProperties = {
   resize: "vertical",
   background: "var(--surface)",
   color: "var(--on-surface)",
+  lineHeight: 1.6,
 };
 const itemRow: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
-  gap: 8,
+  gap: 10,
   padding: "8px 12px",
-  background: "var(--surface)",
-  borderRadius: 6,
-  border: "1px solid var(--outline-variant)",
+  background: "transparent",
+  borderRadius: 0,
+  border: "none",
+  borderBottom: "1px solid var(--outline-variant)",
 };
 const errBox: React.CSSProperties = {
   margin: 16,
@@ -1856,39 +2081,31 @@ const errBox: React.CSSProperties = {
   whiteSpace: "pre-wrap",
 };
 const weeklyBadge: React.CSSProperties = {
-  padding: "4px 12px",
-  background: "var(--secondary-container)",
-  color: "var(--secondary)",
-  borderRadius: 12,
-  fontSize: 13,
-  fontWeight: 500,
-};
-const urgentHero: React.CSSProperties = {
-  display: "flex",
+  display: "inline-flex",
   alignItems: "center",
-  gap: 16,
-  padding: 20,
-  background: "var(--surface)",
-  borderRadius: 12,
+  padding: "3px 10px",
+  background: "transparent",
+  color: "var(--secondary)",
   border: "1px solid var(--outline-variant)",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 500,
+  fontVariantNumeric: "tabular-nums",
 };
 const tileGrid: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-  gap: 12,
+  gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+  gap: 10,
 };
 const tileCard: React.CSSProperties = {
-  padding: "16px 20px",
+  padding: "16px 18px",
   background: "var(--surface)",
-  borderRadius: 12,
-  // Longhand for the leading edge so per-tile `borderInlineStartColor`
-  // overrides don't trigger React's shorthand/longhand conflict warning.
-  borderBlockStart: "1px solid var(--outline-variant)",
-  borderBlockEnd: "1px solid var(--outline-variant)",
-  borderInlineEnd: "1px solid var(--outline-variant)",
-  borderInlineStartWidth: 4,
-  borderInlineStartStyle: "solid",
-  borderInlineStartColor: "var(--primary)",
+  border: "1px solid var(--outline-variant)",
+  borderRadius: 8,
+  display: "flex",
+  flexDirection: "column",
+  gap: 4,
+  transition: "border-color 120ms ease",
 };
 const innerTabs: React.CSSProperties = {
   display: "flex",
@@ -1897,42 +2114,47 @@ const innerTabs: React.CSSProperties = {
   marginBottom: 16,
 };
 const innerTabBtn: React.CSSProperties = {
-  padding: "8px 16px",
+  padding: "8px 14px",
   background: "transparent",
   border: "none",
   cursor: "pointer",
   font: "inherit",
+  fontSize: 13,
   color: "var(--outline)",
   borderBottom: "2px solid transparent",
+  fontWeight: 500,
 };
 const innerTabBtnActive: React.CSSProperties = {
   color: "var(--on-surface)",
   fontWeight: 600,
-  borderBottomColor: "var(--primary)",
+  borderBottom: "2px solid var(--on-surface)",
 };
 const archiveRow: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: 12,
-  padding: "12px 16px",
+  padding: "10px 14px",
   background: "var(--surface)",
   borderRadius: 8,
   border: "1px solid var(--outline-variant)",
 };
 const restoreBtn: React.CSSProperties = {
-  width: 36,
-  height: 36,
-  borderRadius: 18,
+  width: 32,
+  height: 32,
+  borderRadius: 16,
   border: "1px solid var(--outline-variant)",
   background: "var(--surface)",
   cursor: "pointer",
-  fontSize: 18,
-  color: "var(--primary)",
+  fontSize: 16,
+  color: "var(--on-surface-variant)",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
 };
 const settingsCard: React.CSSProperties = {
   padding: 20,
   background: "var(--surface)",
-  borderRadius: 12,
+  borderRadius: 10,
   border: "1px solid var(--outline-variant)",
   marginBottom: 12,
 };
@@ -1940,7 +2162,7 @@ const sidebarItemBtn: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: 8,
-  padding: "8px 16px",
+  padding: 0,
   border: "none",
   background: "transparent",
   cursor: "pointer",
@@ -1960,17 +2182,18 @@ const dialogBackdrop: React.CSSProperties = {
 };
 const dialogPanel: React.CSSProperties = {
   width: "90%",
-  maxWidth: 400,
+  maxWidth: 440,
   background: "var(--surface)",
   color: "var(--on-surface)",
   borderRadius: 12,
-  padding: 20,
-  boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
-  fontFamily: "'Heebo','Inter',system-ui,sans-serif",
+  padding: 24,
+  border: "1px solid var(--outline-variant)",
+  boxShadow: "var(--shadow-modal)",
+  fontFamily: "'Inter','Heebo',system-ui,-apple-system,sans-serif",
 };
 const dialogInput: React.CSSProperties = {
   width: "100%",
-  padding: "8px 10px",
+  padding: "9px 12px",
   border: "1px solid var(--outline-variant)",
   borderRadius: 6,
   fontFamily: "inherit",
@@ -1982,46 +2205,50 @@ const dialogInput: React.CSSProperties = {
 };
 const typeChip: React.CSSProperties = {
   flex: 1,
-  padding: "8px 12px",
+  padding: "7px 12px",
   border: "1px solid var(--outline-variant)",
   borderRadius: 6,
   background: "var(--surface)",
   cursor: "pointer",
   fontFamily: "inherit",
   fontSize: 13,
-  color: "var(--on-surface)",
+  color: "var(--on-surface-variant)",
+  transition: "border-color 120ms ease, background 120ms ease, color 120ms ease",
 };
 const typeChipActive: React.CSSProperties = {
-  background: "var(--selected)",
-  border: "1px solid var(--primary)",
+  background: "var(--surface)",
+  border: "1px solid var(--on-surface)",
   color: "var(--on-surface)",
-  fontWeight: 600,
+  fontWeight: 500,
 };
 const addColumnBtn: React.CSSProperties = {
   alignSelf: "flex-start",
   marginTop: 4,
-  padding: "16px 24px",
+  padding: "12px 18px",
   background: "transparent",
-  border: "1px dashed var(--outline-variant)",
-  borderRadius: 12,
-  color: "var(--on-surface-variant)",
-  fontSize: 14,
+  border: "1px solid var(--outline-variant)",
+  borderRadius: 8,
+  color: "var(--outline)",
+  fontSize: 13,
   cursor: "pointer",
-  height: 50,
-  minWidth: 120,
+  minWidth: 110,
+  transition: "background 120ms ease, color 120ms ease, border-color 120ms ease",
 };
 const urgentBadge: React.CSSProperties = {
   padding: "1px 6px",
   fontSize: 10,
-  background: "var(--error-container)",
-  color: "var(--error)",
-  borderRadius: 8,
+  background: "transparent",
+  border: "1px solid var(--urgency-urgent)",
+  color: "var(--urgency-urgent)",
+  borderRadius: 4,
   marginInlineStart: 4,
   fontWeight: 600,
+  textTransform: "uppercase",
+  letterSpacing: 0.5,
 };
 const addInputStyle: React.CSSProperties = {
   flex: 1,
-  padding: "8px 10px",
+  padding: "8px 12px",
   border: "1px solid var(--outline-variant)",
   borderRadius: 6,
   fontFamily: "inherit",
@@ -2045,25 +2272,28 @@ const sectionToggle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: 8,
-  padding: "8px 4px",
+  padding: "6px 0",
   background: "transparent",
   border: "none",
   cursor: "pointer",
   font: "inherit",
+  fontSize: 13,
   fontWeight: 600,
   color: "var(--on-surface)",
   width: "100%",
   textAlign: "start",
+  letterSpacing: "-0.005em",
 };
 const avatarFallback: React.CSSProperties = {
-  width: 48,
-  height: 48,
-  borderRadius: 24,
-  background: "var(--selected)",
-  color: "var(--primary)",
+  width: 40,
+  height: 40,
+  borderRadius: 20,
+  background: "var(--surface-low)",
+  color: "var(--on-surface-variant)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  fontSize: 22,
-  fontWeight: 600,
+  fontSize: 16,
+  fontWeight: 500,
+  border: "1px solid var(--outline-variant)",
 };
