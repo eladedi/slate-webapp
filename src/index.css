@@ -1,0 +1,130 @@
+:root {
+  --bg: #fff8f5;
+  --surface: #ffffff;
+  --surface-low: #fff1e7;
+  --surface-container: #feeadb;
+  --surface-high: #f8e5d6;
+  --surface-variant: #f2dfd0;
+  --sidebar: #fff1e7;
+
+  --on-surface: #231a11;
+  --on-surface-variant: #55433b;
+  --outline: #88736a;
+  --outline-variant: #dbc1b7;
+
+  --primary: #94451d;
+  --primary-container: #b35d33;
+  --on-primary: #ffffff;
+
+  --secondary: #4c653e;
+  --secondary-container: #cdecba;
+
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
+
+  --urgency-urgent: #d64545;
+  --urgency-urgent-tint: #ffe9e0;
+
+  --hover: #f8e5d6;
+  --selected: #feeadb;
+  --scrim: rgba(58, 47, 37, 0.35);
+
+  --placeholder: #88736a;
+  --scrollbar-thumb: #dbc1b7;
+
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  --bg: #1a1410;
+  --surface: #241c17;
+  --surface-low: #2b211b;
+  --surface-container: #33271f;
+  --surface-high: #3a2d24;
+  --surface-variant: #473529;
+  --sidebar: #1f1813;
+
+  --on-surface: #f2e6dc;
+  --on-surface-variant: #cdbcb0;
+  --outline: #a08c7e;
+  --outline-variant: #5a443a;
+
+  --primary: #e08a3c;
+  --primary-container: #b35d33;
+  --on-primary: #1a1410;
+
+  --secondary: #9fbb7a;
+  --secondary-container: #4c653e;
+
+  --error: #ffb4ab;
+  --error-container: #93000a;
+
+  --urgency-urgent: #ff7a6f;
+  --urgency-urgent-tint: #3d201c;
+
+  --hover: #3a2d24;
+  --selected: #33271f;
+  --scrim: rgba(0, 0, 0, 0.55);
+
+  --placeholder: #a08c7e;
+  --scrollbar-thumb: #5a443a;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--on-surface);
+  font-family: "Heebo", "Inter", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Noto Serif Hebrew", "Noto Serif", serif;
+  font-weight: 700;
+  color: var(--on-surface);
+  letter-spacing: -0.01em;
+}
+
+input,
+textarea,
+button,
+select {
+  font-family: inherit;
+  color: inherit;
+}
+
+::placeholder {
+  color: var(--placeholder);
+  opacity: 1;
+}
+
+/* Calm scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 6px;
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
