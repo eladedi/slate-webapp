@@ -1060,7 +1060,7 @@ Numbered to match §33. Items above the line block functionality; below the line
 9. **Prompt rule for empty-urgent boards** (mobile §28) — append to `DEFAULT_SYSTEM_PROMPT`.
 
 ### Tier 3 — UX / polish
-10. **Checklist done-items partitioning** (mobile §25) — partition done items to the bottom with a 24dp gap; move "+ הוסף פריט" above the done section.
+10. ~~**Checklist done-items partitioning** (mobile §25)~~ **Done 2026-06-13** — `ItemList` now partitions checklist items into `activeItems` (unchecked, draggable) + `doneItems` (checked, pinned to the bottom). Done section has a 24px top margin + hairline divider + "הושלמו N" label; done items render without drag handles (auto-sorted). New `StaticNoteItem` handles the no-drag variant. Bullets keep single-list behavior.
 11. **Tauri native integrations** — system tray, OS notifications (different code path from in-app), single-instance lock, auto-update channel. Defer until web app is at full parity.
 12. **Android-side migration of `markedUrgentCardIds` → Firestore** so marks sync cross-platform. Desktop already writes to `users/{uid}.markedUrgentCardIds`; the Android `SettingsRepository.markedUrgentCardIds` needs to switch from DataStore to a Firestore listener on the same field, with `arrayUnion`/`arrayRemove` on toggle. The Firestore rules already permit user-self-write to `users/{uid}`, so no rules change.
 13. **Component-level theme migration** — `ShareDialog.tsx`, `AssistantPanel.tsx`, `CardDetail.tsx` import the static `t` object instead of `useTheme()`. The CSS-variable layer keeps them close-to-correct in dark mode, but a clean sweep would swap the imports.
@@ -1141,7 +1141,7 @@ Old cards lacking the `assigneeIds` array crashed `CardView`. Added a guard: `if
 The Linear-minimal pass intentionally scoped itself to the three highest-traffic surfaces: **Home, Boards (Kanban), and CardDetail** — plus the sidebar lists and Menu added in the follow-up above. Everything else inherits the new token layer and reads roughly-correct, but hasn't been *deliberately* redesigned. Punch list, in suggested order:
 
 **Screens not yet structurally redesigned**
-1. **NoteView (`App.tsx` → `NoteView` / `FreeTextEditor` / `ItemList` / `SortableNoteItem`).** Currently uses the shared `addInputStyle` / `itemRow` / `textareaStyle` constants. Works, but the active-vs-done partition from mobile §25 isn't here yet (also listed as §34 #10). The note title rendering could match CardDetail's borderless-until-focus pattern.
+1. **NoteView (`App.tsx` → `NoteView` / `FreeTextEditor` / `ItemList` / `SortableNoteItem`).** Active-vs-done partition shipped 2026-06-13 (§34 #10). Still open: the note title rendering could match CardDetail's borderless-until-focus pattern; FreeTextEditor's textarea could lose its visible border until focus.
 2. **ArchiveScreen.** Inner tabs already use the refreshed treatment; archive rows could move to the same single-bordered-card-with-hairline-dividers list pattern used by `UrgentTaskRow` on Home for visual consistency.
 3. **SettingsScreen.** The appearance section (theme chips) is fine, but the account/about cards still feel like generic surfaces. Worth a Linear-style profile-row treatment with subtle dividers between sections.
 4. **Login screen (`App.tsx` unauthenticated branch).** Hardcoded "Slate Desktop" title + "התחבר עם Google" button. Centered card layout is acceptable but unbranded. Wants a more confident lockup (mark + tagline + button hierarchy).
