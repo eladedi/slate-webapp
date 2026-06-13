@@ -1129,9 +1129,16 @@ Old cards lacking the `assigneeIds` array crashed `CardView`. Added a guard: `if
 **No changes needed**
 - `src/components/ShareDialog.tsx`, `src/components/AssistantPanel.tsx` — these import the static `t` object and inherit the refreshed token values. They look light-mode-correct and roughly-correct in dark; flagged as §34 #13 follow-up to swap them to `useTheme()` for full per-mode polish.
 
+### Sidebar list redesign (2026-06-13 follow-up)
+- Boards-list and notes-list sidebars rebuilt around a shared `SidebarHeader` + `SidebarRow` pair (`App.tsx`).
+- Sticky header at top: section title (`13px / weight 600`), tabular muted count, hover-revealed `+` icon button (uses `Icon name="plus"`). Retired the bottom "+ לוח חדש" / "+ פתק חדש" text button.
+- Rows: hover state (`var(--selected)`) distinct from selected (`var(--selected-strong)` + medium weight name). 3-dot menu fades in on hover or when the row is selected, keeping resting rows clean.
+- Empty state ("אין עדיין לוחות" / "אין עדיין פתקים") when the list is empty.
+- `Menu.tsx` aligned in the same pass — tokens for surface / border / shadow / text, destructive items use `var(--error)`. Popover uses `--shadow-popover`.
+
 ### Design work remaining (next pass)
 
-The Linear-minimal pass intentionally scoped itself to the three highest-traffic surfaces: **Home, Boards (Kanban), and CardDetail**. Everything else inherits the new token layer and reads roughly-correct, but hasn't been *deliberately* redesigned. Punch list, in suggested order:
+The Linear-minimal pass intentionally scoped itself to the three highest-traffic surfaces: **Home, Boards (Kanban), and CardDetail** — plus the sidebar lists and Menu added in the follow-up above. Everything else inherits the new token layer and reads roughly-correct, but hasn't been *deliberately* redesigned. Punch list, in suggested order:
 
 **Screens not yet structurally redesigned**
 1. **NoteView (`App.tsx` → `NoteView` / `FreeTextEditor` / `ItemList` / `SortableNoteItem`).** Currently uses the shared `addInputStyle` / `itemRow` / `textareaStyle` constants. Works, but the active-vs-done partition from mobile §25 isn't here yet (also listed as §34 #10). The note title rendering could match CardDetail's borderless-until-focus pattern.
@@ -1143,7 +1150,7 @@ The Linear-minimal pass intentionally scoped itself to the three highest-traffic
 **Components not yet restyled**
 6. **`ShareDialog.tsx`.** Imports the static `t` object (so it inherits new color values but uses old radii + paddings). Visual structure (role chip row, link copy block) is sound; a refresh would tighten field padding, swap chip radii to match elsewhere, and update the link copy block.
 7. **`AssistantPanel.tsx`.** Same `t`-import situation as ShareDialog, but more visible — the left-side sheet is a big surface. Bubbles, proposal cards, the input row, and the settings sub-screen all read "v1" against the new Linear aesthetic.
-8. **`Menu.tsx`** (3-dot popover used on board rows, note rows, columns, etc.). Hasn't been opened in this pass. Worth checking padding, hover state, destructive item color.
+8. ~~**`Menu.tsx`** (3-dot popover used on board rows, note rows, columns, etc.).~~ **Done 2026-06-13** — swapped hardcoded warm hex for tokens, destructive items use `var(--error)`, popover uses `--shadow-popover`, dark-mode-correct.
 9. **`Toast.tsx`** (success/error host). Inherits via the toast component's own inline styles. If the host hardcodes warm cream / brown hex, swap to neutral tokens.
 
 **Architectural cleanups**

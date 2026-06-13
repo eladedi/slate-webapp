@@ -53,8 +53,8 @@ export function Menu({
               }}
               style={{
                 ...menuItem,
-                ...(it.destructive ? { color: "#BA1A1A" } : {}),
-                ...(it.disabled ? { color: "#88736a", cursor: "not-allowed" } : {}),
+                ...(it.destructive ? { color: "var(--error)" } : {}),
+                ...(it.disabled ? { color: "var(--outline)", cursor: "not-allowed" } : {}),
               }}
             >
               {it.label}
@@ -73,32 +73,36 @@ const triggerBtn: React.CSSProperties = {
   background: "transparent",
   cursor: "pointer",
   fontSize: 18,
-  color: "#88736a",
-  borderRadius: 12,
+  color: "var(--outline)",
+  borderRadius: 6,
   lineHeight: 1,
   padding: 0,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
 };
 const menuPanel: React.CSSProperties = {
   position: "absolute",
-  top: "100%",
+  top: "calc(100% + 4px)",
   minWidth: 160,
-  background: "#fff",
-  border: "1px solid #dbc1b7",
+  background: "var(--surface)",
+  color: "var(--on-surface)",
+  border: "1px solid var(--outline-variant)",
   borderRadius: 8,
-  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+  boxShadow: "var(--shadow-popover)",
   padding: 4,
   zIndex: 50,
   display: "flex",
   flexDirection: "column",
 };
 const menuItem: React.CSSProperties = {
-  padding: "8px 12px",
+  padding: "7px 10px",
   border: "none",
   background: "transparent",
   cursor: "pointer",
   textAlign: "start",
   fontFamily: "inherit",
-  fontSize: 14,
+  fontSize: 13,
   color: "inherit",
   borderRadius: 4,
 };

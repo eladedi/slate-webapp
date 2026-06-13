@@ -271,135 +271,125 @@ export default function App() {
       {(dest === "boards" || dest === "notes") && (
         <aside style={sidebar}>
           {dest === "boards" ? (
-            <div style={{ padding: "8px 0" }}>
-              <div style={navLabel}>הלוחות שלי</div>
-              {boards.map((b) => (
-                <div
-                  key={b.id}
-                  style={{
-                    ...boardRow,
-                    background: b.id === selectedBoardId ? "var(--selected-strong)" : "transparent",
-                    padding: "6px 12px",
-                  }}
-                >
-                  <button
-                    onClick={() => setSelectedBoardId(b.id)}
-                    style={{ ...sidebarItemBtn, flex: 1, fontSize: 13.5 }}
-                  >
-                    <span style={{ ...colorDot, background: b.color || "var(--primary)" }} />
-                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {b.name}
-                    </span>
-                  </button>
-                  <Menu
-                    items={[
-                      {
-                        label: "שנה שם",
-                        onSelect: async () => {
-                          const name = window.prompt("שם חדש ללוח:", b.name);
-                          if (name?.trim() && name.trim() !== b.name) {
+            <>
+              <SidebarHeader
+                title="הלוחות שלי"
+                count={boards.length}
+                addLabel="לוח חדש"
+                onAdd={() => setCreatingBoard(true)}
+              />
+              <div style={sidebarList}>
+                {boards.length === 0 ? (
+                  <div style={sidebarEmpty}>אין עדיין לוחות</div>
+                ) : (
+                  boards.map((b) => (
+                    <SidebarRow
+                      key={b.id}
+                      label={b.name}
+                      dotColor={b.color || "var(--primary)"}
+                      selected={b.id === selectedBoardId}
+                      onSelect={() => setSelectedBoardId(b.id)}
+                      menuItems={[
+                        {
+                          label: "שנה שם",
+                          onSelect: async () => {
+                            const name = window.prompt("שם חדש ללוח:", b.name);
+                            if (name?.trim() && name.trim() !== b.name) {
+                              try {
+                                await renameBoard(b.id, name.trim());
+                              } catch (e) {
+                                toast.error((e as Error).message);
+                              }
+                            }
+                          },
+                        },
+                        {
+                          label: "מחק לוח",
+                          destructive: true,
+                          disabled: b.ownerId !== user.uid,
+                          onSelect: async () => {
+                            if (b.ownerId !== user.uid) {
+                              toast.error("רק הבעלים יכול למחוק את הלוח");
+                              return;
+                            }
+                            if (!confirm(`למחוק את "${b.name}" ואת כל המשימות בו?`)) return;
                             try {
-                              await renameBoard(b.id, name.trim());
+                              await deleteBoard(b.id);
+                              if (selectedBoardId === b.id) setSelectedBoardId(null);
                             } catch (e) {
                               toast.error((e as Error).message);
                             }
-                          }
+                          },
                         },
-                      },
-                      {
-                        label: "מחק לוח",
-                        destructive: true,
-                        disabled: b.ownerId !== user.uid,
-                        onSelect: async () => {
-                          if (b.ownerId !== user.uid) {
-                            toast.error("רק הבעלים יכול למחוק את הלוח");
-                            return;
-                          }
-                          if (!confirm(`למחוק את "${b.name}" ואת כל המשימות בו?`)) return;
-                          try {
-                            await deleteBoard(b.id);
-                            if (selectedBoardId === b.id) setSelectedBoardId(null);
-                          } catch (e) {
-                            toast.error((e as Error).message);
-                          }
-                        },
-                      },
-                    ]}
-                  />
-                </div>
-              ))}
-              <button style={{ ...addCardBtn, margin: "8px 16px" }} onClick={() => setCreatingBoard(true)}>
-                + לוח חדש
-              </button>
-            </div>
+                      ]}
+                    />
+                  ))
+                )}
+              </div>
+            </>
           ) : (
-            <div style={{ padding: "8px 0" }}>
-              <div style={navLabel}>הפתקים שלי</div>
-              {notes.map((n) => (
-                <div
-                  key={n.id}
-                  style={{
-                    ...boardRow,
-                    background: n.id === selectedNoteId ? "var(--selected-strong)" : "transparent",
-                    padding: "6px 12px",
-                  }}
-                >
-                  <button
-                    onClick={() => setSelectedNoteId(n.id)}
-                    style={{ ...sidebarItemBtn, flex: 1, fontSize: 13.5 }}
-                  >
-                    <span style={{ ...colorDot, background: "var(--on-surface-variant)" }} />
-                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {n.name}
-                    </span>
-                  </button>
-                  <Menu
-                    items={[
-                      {
-                        label: "שנה שם",
-                        onSelect: async () => {
-                          const name = window.prompt("שם חדש לפתק:", n.name);
-                          if (name?.trim() && name.trim() !== n.name) {
+            <>
+              <SidebarHeader
+                title="הפתקים שלי"
+                count={notes.length}
+                addLabel="פתק חדש"
+                onAdd={() => setCreatingNote(true)}
+              />
+              <div style={sidebarList}>
+                {notes.length === 0 ? (
+                  <div style={sidebarEmpty}>אין עדיין פתקים</div>
+                ) : (
+                  notes.map((n) => (
+                    <SidebarRow
+                      key={n.id}
+                      label={n.name}
+                      dotColor="var(--on-surface-variant)"
+                      selected={n.id === selectedNoteId}
+                      onSelect={() => setSelectedNoteId(n.id)}
+                      menuItems={[
+                        {
+                          label: "שנה שם",
+                          onSelect: async () => {
+                            const name = window.prompt("שם חדש לפתק:", n.name);
+                            if (name?.trim() && name.trim() !== n.name) {
+                              try {
+                                await renameNote(n.id, name.trim());
+                              } catch (e) {
+                                toast.error((e as Error).message);
+                              }
+                            }
+                          },
+                        },
+                        {
+                          label: "העבר לארכיון",
+                          onSelect: async () => {
                             try {
-                              await renameNote(n.id, name.trim());
+                              await archiveNote(n.id);
+                              if (selectedNoteId === n.id) setSelectedNoteId(null);
                             } catch (e) {
                               toast.error((e as Error).message);
                             }
-                          }
+                          },
                         },
-                      },
-                      {
-                        label: "העבר לארכיון",
-                        onSelect: async () => {
-                          try {
-                            await archiveNote(n.id);
-                            if (selectedNoteId === n.id) setSelectedNoteId(null);
-                          } catch (e) {
-                            toast.error((e as Error).message);
-                          }
+                        {
+                          label: "מחק לצמיתות",
+                          destructive: true,
+                          onSelect: async () => {
+                            if (!confirm(`למחוק לצמיתות את "${n.name}"?`)) return;
+                            try {
+                              await deleteNote(n.id);
+                              if (selectedNoteId === n.id) setSelectedNoteId(null);
+                            } catch (e) {
+                              toast.error((e as Error).message);
+                            }
+                          },
                         },
-                      },
-                      {
-                        label: "מחק לצמיתות",
-                        destructive: true,
-                        onSelect: async () => {
-                          if (!confirm(`למחוק לצמיתות את "${n.name}"?`)) return;
-                          try {
-                            await deleteNote(n.id);
-                            if (selectedNoteId === n.id) setSelectedNoteId(null);
-                          } catch (e) {
-                            toast.error((e as Error).message);
-                          }
-                        },
-                      },
-                    ]}
-                  />
-                </div>
-              ))}
-              <button style={{ ...addCardBtn, margin: "8px 16px" }} onClick={() => setCreatingNote(true)}>
-                + פתק חדש
-              </button>
-            </div>
+                      ]}
+                    />
+                  ))
+                )}
+              </div>
+            </>
           )}
         </aside>
       )}
@@ -1644,6 +1634,11 @@ function ItemList({ note }: { note: Note }) {
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
 
+  // For checklists: split into unchecked (active, draggable) and checked
+  // (done, parked at the bottom). Bullets keep a single ordered list.
+  const activeItems = isChecklist ? items.filter((i) => !i.checked) : items;
+  const doneItems = isChecklist ? items.filter((i) => i.checked) : [];
+
   async function handleAdd() {
     const text = adding.trim();
     if (!text) return;
@@ -1658,12 +1653,15 @@ function ItemList({ note }: { note: Note }) {
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const oldIdx = items.findIndex((i) => i.id === active.id);
-    const newIdx = items.findIndex((i) => i.id === over.id);
+    // Reorder happens only within the active partition. Done items stay
+    // pinned to the bottom in their existing relative order.
+    const oldIdx = activeItems.findIndex((i) => i.id === active.id);
+    const newIdx = activeItems.findIndex((i) => i.id === over.id);
     if (oldIdx < 0 || newIdx < 0) return;
-    const next = arrayMove(items, oldIdx, newIdx);
+    const nextActive = arrayMove(activeItems, oldIdx, newIdx);
+    const fullOrder = [...nextActive, ...doneItems].map((i) => i.id);
     try {
-      await reorderItems(note.id, next.map((i) => i.id));
+      await reorderItems(note.id, fullOrder);
     } catch (e) {
       toast.error((e as Error).message);
     }
@@ -1672,9 +1670,12 @@ function ItemList({ note }: { note: Note }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-        <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {items.map((item) => (
+        <SortableContext
+          items={activeItems.map((i) => i.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {activeItems.map((item) => (
               <SortableNoteItem
                 key={item.id}
                 noteId={note.id}
@@ -1685,7 +1686,8 @@ function ItemList({ note }: { note: Note }) {
           </div>
         </SortableContext>
       </DndContext>
-      <div style={{ display: "flex", gap: 6 }}>
+
+      <div style={{ display: "flex", gap: 6, marginTop: activeItems.length > 0 ? 4 : 0 }}>
         <input
           style={addInputStyle}
           placeholder="הוסף פריט…"
@@ -1699,6 +1701,87 @@ function ItemList({ note }: { note: Note }) {
           הוסף
         </button>
       </div>
+
+      {doneItems.length > 0 && (
+        <div style={doneSection}>
+          <div style={doneSectionLabel}>
+            <span>הושלמו</span>
+            <span style={{ color: "var(--outline)", fontVariantNumeric: "tabular-nums" }}>
+              {doneItems.length}
+            </span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {doneItems.map((item) => (
+              <StaticNoteItem key={item.id} noteId={note.id} item={item} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StaticNoteItem({
+  noteId,
+  item,
+}: {
+  noteId: string;
+  item: import("./types").NoteItem;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(item.text);
+  useEffect(() => setText(item.text), [item.id, item.text]);
+
+  function commit() {
+    setEditing(false);
+    const next = text.trim();
+    if (next === item.text) return;
+    if (next === "") {
+      deleteItem(noteId, item.id).catch((e) => toast.error((e as Error).message));
+    } else {
+      updateItem(noteId, item.id, next, item.checked).catch((e) =>
+        toast.error((e as Error).message),
+      );
+    }
+  }
+
+  return (
+    <div style={itemRow}>
+      {/* No drag handle for done items — they're auto-sorted to the bottom. */}
+      <span style={{ width: 14, display: "inline-block" }} />
+      <input
+        type="checkbox"
+        checked={item.checked}
+        onChange={() => toggleItem(noteId, item.id).catch((e) => toast.error(e.message))}
+      />
+      {editing ? (
+        <input
+          autoFocus
+          style={inlineNoteInput}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+            if (e.key === "Escape") {
+              setText(item.text);
+              setEditing(false);
+            }
+          }}
+        />
+      ) : (
+        <span
+          onClick={() => setEditing(true)}
+          style={{
+            flex: 1,
+            cursor: "text",
+            textDecoration: "line-through",
+            color: "var(--outline)",
+          }}
+        >
+          {item.text}
+        </span>
+      )}
     </div>
   );
 }
@@ -1788,6 +1871,104 @@ function SortableNoteItem({
           {item.text}
         </span>
       )}
+    </div>
+  );
+}
+
+// -------------------- sidebar list (boards / notes) --------------------
+
+function SidebarHeader({
+  title,
+  count,
+  addLabel,
+  onAdd,
+}: {
+  title: string;
+  count: number;
+  addLabel: string;
+  onAdd: () => void;
+}) {
+  const [hover, setHover] = useState(false);
+  return (
+    <div style={sidebarHeader}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}>
+        <span style={sidebarTitle}>{title}</span>
+        <span style={sidebarCount}>{count}</span>
+      </div>
+      <button
+        onClick={onAdd}
+        title={addLabel}
+        aria-label={addLabel}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          ...sidebarHeaderBtn,
+          background: hover ? "var(--selected)" : "transparent",
+          color: hover ? "var(--on-surface)" : "var(--outline)",
+        }}
+      >
+        <Icon name="plus" size={16} />
+      </button>
+    </div>
+  );
+}
+
+function SidebarRow({
+  label,
+  dotColor,
+  selected,
+  onSelect,
+  menuItems,
+}: {
+  label: string;
+  dotColor: string;
+  selected: boolean;
+  onSelect: () => void;
+  menuItems: import("./components/Menu").MenuItem[];
+}) {
+  const [hover, setHover] = useState(false);
+  const showMenu = hover || selected;
+  const background = selected
+    ? "var(--selected-strong)"
+    : hover
+      ? "var(--selected)"
+      : "transparent";
+  return (
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{ ...sidebarRow, background }}
+    >
+      <button
+        onClick={onSelect}
+        style={{
+          ...sidebarItemBtn,
+          flex: 1,
+          fontSize: 13.5,
+          fontWeight: selected ? 500 : 400,
+          color: "var(--on-surface)",
+        }}
+      >
+        <span style={{ ...colorDot, background: dotColor }} />
+        <span
+          style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {label}
+        </span>
+      </button>
+      <div
+        style={{
+          opacity: showMenu ? 1 : 0,
+          transition: "opacity 120ms ease",
+          pointerEvents: showMenu ? "auto" : "none",
+        }}
+      >
+        <Menu items={menuItems} />
+      </div>
     </div>
   );
 }
@@ -1905,28 +2086,88 @@ const main: React.CSSProperties = {
   minWidth: 0,
 };
 const emptyMain: React.CSSProperties = { padding: 24, color: "var(--outline)" };
-const navLabel: React.CSSProperties = {
-  padding: "14px 16px 6px",
-  fontSize: 11,
-  textTransform: "none",
-  color: "var(--outline)",
-  letterSpacing: 0,
-  fontWeight: 500,
-};
-const boardRow: React.CSSProperties = {
+
+// Sidebar: sticky header + scrollable list of rows. Used for both
+// boards-list and notes-list under the Boards/Notes destinations.
+const sidebarHeader: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
-  gap: 8,
-  padding: "6px 12px",
-  marginInline: 8,
-  borderRadius: 6,
-  width: "calc(100% - 16px)",
+  justifyContent: "space-between",
+  padding: "14px 16px 10px",
+  position: "sticky",
+  top: 0,
+  background: "var(--bg)",
+  zIndex: 1,
+};
+const sidebarTitle: React.CSSProperties = {
+  fontSize: 13,
+  fontWeight: 600,
+  color: "var(--on-surface)",
+  letterSpacing: "-0.005em",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+};
+const sidebarCount: React.CSSProperties = {
+  fontSize: 12,
+  color: "var(--outline)",
+  fontVariantNumeric: "tabular-nums",
+  fontWeight: 500,
+};
+const sidebarHeaderBtn: React.CSSProperties = {
+  width: 24,
+  height: 24,
   border: "none",
-  background: "transparent",
+  borderRadius: 6,
   cursor: "pointer",
-  textAlign: "start",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: 0,
+  flexShrink: 0,
+  transition: "background 120ms ease, color 120ms ease",
+};
+const sidebarList: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 1,
+  padding: "0 8px 12px",
+};
+const sidebarRow: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 4,
+  padding: "5px 8px",
+  borderRadius: 6,
+  border: "none",
+  cursor: "pointer",
   font: "inherit",
   color: "inherit",
+  transition: "background 120ms ease",
+  minHeight: 32,
+};
+const sidebarEmpty: React.CSSProperties = {
+  padding: "12px 12px 4px",
+  fontSize: 12.5,
+  color: "var(--outline)",
+};
+
+// Checklist: divider + collapsible-ish header for the "done" partition
+// pinned at the bottom of the list. Mobile mirror: §25 partitioning.
+const doneSection: React.CSSProperties = {
+  marginTop: 24,
+  paddingTop: 16,
+  borderTop: "1px solid var(--outline-variant)",
+};
+const doneSectionLabel: React.CSSProperties = {
+  display: "flex",
+  alignItems: "baseline",
+  gap: 8,
+  padding: "0 12px",
+  marginBottom: 6,
+  fontSize: 12,
+  fontWeight: 500,
+  color: "var(--on-surface-variant)",
 };
 const colorDot: React.CSSProperties = {
   display: "inline-block",
